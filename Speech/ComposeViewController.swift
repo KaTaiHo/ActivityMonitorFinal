@@ -37,6 +37,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     var backgroundTask = BackgroundTask()
     var audioEngine = AVAudioEngine()
     var userInput = String()
+    var sessionStarted = false
+    var clockTimer = 0
     
     let synth = AVSpeechSynthesizer()
     let canSpeak = CanSpeak()
@@ -48,6 +50,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         ref = FIRDatabase.database().reference()
         userId = FIRAuth.auth()?.currentUser?.uid
         textView.isEditable = false
+        setupSessionForRecording()
     }
     
     @IBAction func recordAudio(_ sender: NSObject) {
@@ -59,7 +62,14 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         
         backgroundTask.startBackgroundTask()
         askUser()
-        textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.askUser), userInfo: nil, repeats: true)
+        textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 600, target: self, selector: #selector(self.askUser), userInfo: nil, repeats: true)
+        _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
+        self.sessionStarted = true
+    }
+    
+    func clockTick() {
+        clockTimer = clockTimer + 30
+        print (String(clockTimer / 60) + " minutes and " +  String(clockTimer % 60) + " seconds have passed")
     }
     
     func setupSessionForRecording() {
@@ -95,7 +105,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     func askUser() {
         backgroundTask.pauseBackgroundTask()
-        
         self.canSpeak.sayThis("Hello, What are you doing right now?")
     }
     
@@ -105,31 +114,44 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         pauseButton.alpha = 0.5
         pauseButton.isUserInteractionEnabled = false
         
-        audioEngine.stop()
-        self.stopAudioTemp()
-//        backgroundTask.stopBackgroundTask()
-//        textToSpeechTimerBackground.invalidate()
+        if self.sessionStarted {
+            audioEngine.stop()
+            self.stopAudioTemp()
+            backgroundTask.stopBackgroundTask()
+            textToSpeechTimerBackground.invalidate()
+        }
         
+        self.sessionStarted = false
         presentingViewController?.dismiss(animated: true, completion: nil)
     }
     
     func recordUser() {
         if !self.synth.isSpeaking {
-            print ("You can say something now!")
-            setupSessionForRecording()
+
+//            setupSessionForRecordingp()
+            let audioSession = AVAudioSession.sharedInstance()
+            do {
+                try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth])
+            } catch {
+                fatalError("Error Setting Up Audio Session")
+            }
             
+            print ("You can say something now!")
+            self.textView.text = "You can say something now"
             audioData = NSMutableData()
             _ = AudioController.sharedInstance.prepare(specifiedSampleRate: Int(SAMPLE_RATE))
             SpeechRecognitionService.sharedInstance.sampleRate = Int(SAMPLE_RATE)
             _ = AudioController.sharedInstance.start()
+            
             if #available(iOS 10.0, *) {
-                _ = Timer.scheduledTimer(withTimeInterval: 15, repeats: false, block: { (timer) in
+                _ = Timer.scheduledTimer(withTimeInterval: 10, repeats: false, block: { (timer) in
                     self.stopAudioTemp()
                     print("in timer")
                     do {
                         if self.userInput == "" {
                             print("no response from the user")
                             self.userInput = "No Response From User"
+                            self.textView.text = self.userInput
                             let audioSession = AVAudioSession.sharedInstance()
                             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
 //                            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
@@ -141,6 +163,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     } catch {
                         // handle errors
                     }
+                    print("timer has ended")
                 })
             } else {
                 // Fallback on earlier versions
@@ -170,6 +193,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         _ = AudioController.sharedInstance.stop()
         SpeechRecognitionService.sharedInstance.stopStreaming()
         backgroundTask.stopBackgroundTask()
+        textToSpeechTimerBackground.invalidate()
+        self.sessionStarted = false
     }
     
     func stopAudioTemp() {
@@ -210,8 +235,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         }
 //                        strongSelf.textView.text = response.description
                         
-                        
                         if finished {
+                            strongSelf.textView.text = self?.userInput
                             strongSelf.stopAudioTemp()
                             do {
                                 print ("finished recording")
