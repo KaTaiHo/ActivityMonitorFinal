@@ -18,6 +18,7 @@
 		4BF0D7ED1FE653B20006BA2C /* ComposeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7EC1FE653B20006BA2C /* ComposeViewController.swift */; };
 		4BF0D7EF1FE65B650006BA2C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BF0D7EE1FE65B650006BA2C /* AVFoundation.framework */; };
 		4BF0D7F11FE65B710006BA2C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BF0D7F01FE65B710006BA2C /* AudioToolbox.framework */; };
+		4BF0D7F31FE9B9020006BA2C /* silence.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 4BF0D7F21FE9B9010006BA2C /* silence.mp3 */; };
 		D31E0EB81D778A56006A50AB /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D31E0EB71D778A56006A50AB /* SpeechRecognitionService.swift */; };
 		D31E0EBA1D77AA2F006A50AB /* AudioController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D31E0EB91D77AA2F006A50AB /* AudioController.swift */; };
 		D34C17D91C948F5800D69BCA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D34C17D81C948F5800D69BCA /* Assets.xcassets */; };
@@ -38,6 +39,7 @@
 		4BF0D7EC1FE653B20006BA2C /* ComposeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeViewController.swift; sourceTree = "<group>"; };
 		4BF0D7EE1FE65B650006BA2C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		4BF0D7F01FE65B710006BA2C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		4BF0D7F21FE9B9010006BA2C /* silence.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = silence.mp3; sourceTree = "<group>"; };
 		54C3D1E96C8C43AB14662311 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E83ACE29B0D0DF0085BA8F2 /* Pods-Speech.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Speech.release.xcconfig"; path = "Pods/Target Support Files/Pods-Speech/Pods-Speech.release.xcconfig"; sourceTree = "<group>"; };
 		6C682F8DD9C94E41979FE816 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 		D34C17CB1C948F5700D69BCA /* Speech */ = {
 			isa = PBXGroup;
 			children = (
+				4BF0D7F21FE9B9010006BA2C /* silence.mp3 */,
 				4BF0D7E81FE644D90006BA2C /* GoogleService-Info.plist */,
 				4BF0D7E21FE641770006BA2C /* UIColor+hex.swift */,
 				4BF0D7DE1FE63E0D0006BA2C /* logic.mp3 */,
@@ -209,6 +212,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4BF0D7F31FE9B9020006BA2C /* silence.mp3 in Resources */,
 				D392D9861C94937D002F5132 /* Main.storyboard in Resources */,
 				4BF0D7DF1FE63E0D0006BA2C /* logic.mp3 in Resources */,
 				4BF0D7E91FE644D90006BA2C /* GoogleService-Info.plist in Resources */,
