@@ -23,9 +23,7 @@ import FirebaseDatabase
 let SAMPLE_RATE = 44100.0
 
 class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpeakDelegate {
-//    @IBOutlet weak var textView: UITextView!
     @IBOutlet weak var textView: UITextView!
-    
     @IBOutlet weak var startButton: UIButton!
     @IBOutlet weak var pauseButton: UIButton!
     
@@ -62,7 +60,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         
         backgroundTask.startBackgroundTask()
         askUser()
-        textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 600, target: self, selector: #selector(self.askUser), userInfo: nil, repeats: true)
+        textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 1800, target: self, selector: #selector(self.askUser), userInfo: nil, repeats: true)
         _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
         self.sessionStarted = true
     }
@@ -125,6 +123,20 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         presentingViewController?.dismiss(animated: true, completion: nil)
     }
     
+    @IBAction func stopAudio(_ sender: NSObject) {
+        print("stopping the audio")
+        startButton.alpha = 1
+        startButton.isUserInteractionEnabled = true
+        pauseButton.alpha = 0.5
+        pauseButton.isUserInteractionEnabled = false
+        
+        _ = AudioController.sharedInstance.stop()
+        SpeechRecognitionService.sharedInstance.stopStreaming()
+        backgroundTask.stopBackgroundTask()
+        textToSpeechTimerBackground.invalidate()
+        self.sessionStarted = false
+    }
+    
     func recordUser() {
         if !self.synth.isSpeaking {
 
@@ -144,7 +156,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             _ = AudioController.sharedInstance.start()
             
             if #available(iOS 10.0, *) {
-                _ = Timer.scheduledTimer(withTimeInterval: 10, repeats: false, block: { (timer) in
+                _ = Timer.scheduledTimer(withTimeInterval: 20, repeats: false, block: { (timer) in
                     self.stopAudioTemp()
                     print("in timer")
                     do {
@@ -157,7 +169,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
 //                            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
                             self.backgroundTask.startBackgroundTask()
                             self.addPostFunc()
-                            print("after 10 seconds")
+                            print("after 20 seconds")
                         }
                         self.userInput = ""
                     } catch {
@@ -180,21 +192,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             }
         }
         return nil
-    }
-    
-    @IBAction func stopAudio(_ sender: NSObject) {
-        print("stopping the audio")
-        
-        startButton.alpha = 1
-        startButton.isUserInteractionEnabled = true
-        pauseButton.alpha = 0.5
-        pauseButton.isUserInteractionEnabled = false
-        
-        _ = AudioController.sharedInstance.stop()
-        SpeechRecognitionService.sharedInstance.stopStreaming()
-        backgroundTask.stopBackgroundTask()
-        textToSpeechTimerBackground.invalidate()
-        self.sessionStarted = false
     }
     
     func stopAudioTemp() {
@@ -220,6 +217,9 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     
                     if let error = error {
                         strongSelf.textView.text = error.localizedDescription
+                        self?.userInput = error.localizedDescription
+                        self?.doneWithRecording()
+                        
                     } else if let response = response {
                         var finished = false
                         //                        print(response)
@@ -229,7 +229,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                                     finished = true
                                     let test = result.alternativesArray[0] as! SpeechRecognitionAlternative
                                     print ("data: " + String(describing: test.transcript!))
-                                    self?.userInput = String(describing: test.transcript!)
+                                    strongSelf.userInput = String(describing: test.transcript!)
                                 }
                             }
                         }
@@ -237,17 +237,18 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         
                         if finished {
                             strongSelf.textView.text = self?.userInput
-                            strongSelf.stopAudioTemp()
-                            do {
-                                print ("finished recording")
-                                let audioSession = AVAudioSession.sharedInstance()
-                                try audioSession.setCategory(AVAudioSessionCategoryPlayback)
-                                self?.backgroundTask.startBackgroundTask()
-                                self?.addPostFunc()
-                            } catch {
-                                // handle errors
-                            }
-
+                            strongSelf.doneWithRecording()
+//                            strongSelf.textView.text = self?.userInput
+//                            strongSelf.stopAudioTemp()
+//                            do {
+//                                print ("finished recording")
+//                                let audioSession = AVAudioSession.sharedInstance()
+//                                try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+//                                self?.backgroundTask.startBackgroundTask()
+//                                self?.addPostFunc()
+//                            } catch {
+//                                // handle errors
+//                            }
                         }
                     }
             })
@@ -257,6 +258,19 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     func speechDidFinish() {
         self.recordUser()
+    }
+    
+    func doneWithRecording() {
+        self.stopAudioTemp()
+        do {
+            print ("finished recording")
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+            self.backgroundTask.startBackgroundTask()
+            self.addPostFunc()
+        } catch {
+            // handle errors
+        }
     }
     
     func addPostFunc () {

@@ -10,7 +10,6 @@
 		2C450CC6320CA9890051ABAF /* Pods_Speech.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0B7F558BD8BC89862C8C277 /* Pods_Speech.framework */; };
 		4BF0D7DB1FE63DC60006BA2C /* canSpeak.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7DA1FE63DC60006BA2C /* canSpeak.swift */; };
 		4BF0D7DD1FE63DCE0006BA2C /* backgroundTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7DC1FE63DCE0006BA2C /* backgroundTask.swift */; };
-		4BF0D7DF1FE63E0D0006BA2C /* logic.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 4BF0D7DE1FE63E0D0006BA2C /* logic.mp3 */; };
 		4BF0D7E11FE63FBD0006BA2C /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7E01FE63FBD0006BA2C /* MainViewController.swift */; };
 		4BF0D7E31FE641770006BA2C /* UIColor+hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7E21FE641770006BA2C /* UIColor+hex.swift */; };
 		4BF0D7E91FE644D90006BA2C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4BF0D7E81FE644D90006BA2C /* GoogleService-Info.plist */; };
@@ -31,7 +30,6 @@
 /* Begin PBXFileReference section */
 		4BF0D7DA1FE63DC60006BA2C /* canSpeak.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = canSpeak.swift; sourceTree = "<group>"; };
 		4BF0D7DC1FE63DCE0006BA2C /* backgroundTask.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = backgroundTask.swift; sourceTree = "<group>"; };
-		4BF0D7DE1FE63E0D0006BA2C /* logic.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = logic.mp3; sourceTree = "<group>"; };
 		4BF0D7E01FE63FBD0006BA2C /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		4BF0D7E21FE641770006BA2C /* UIColor+hex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIColor+hex.swift"; sourceTree = "<group>"; };
 		4BF0D7E81FE644D90006BA2C /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -107,7 +105,6 @@
 				4BF0D7F21FE9B9010006BA2C /* silence.mp3 */,
 				4BF0D7E81FE644D90006BA2C /* GoogleService-Info.plist */,
 				4BF0D7E21FE641770006BA2C /* UIColor+hex.swift */,
-				4BF0D7DE1FE63E0D0006BA2C /* logic.mp3 */,
 				4BF0D7DC1FE63DCE0006BA2C /* backgroundTask.swift */,
 				4BF0D7DA1FE63DC60006BA2C /* canSpeak.swift */,
 				D3E34EA01D77541D00EF755D /* AppDelegate.swift */,
@@ -214,7 +211,6 @@
 			files = (
 				4BF0D7F31FE9B9020006BA2C /* silence.mp3 in Resources */,
 				D392D9861C94937D002F5132 /* Main.storyboard in Resources */,
-				4BF0D7DF1FE63E0D0006BA2C /* logic.mp3 in Resources */,
 				4BF0D7E91FE644D90006BA2C /* GoogleService-Info.plist in Resources */,
 				D34C17DC1C948F5800D69BCA /* LaunchScreen.storyboard in Resources */,
 				D34C17D91C948F5800D69BCA /* Assets.xcassets in Resources */,
