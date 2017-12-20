@@ -149,6 +149,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             }
             
             print ("You can say something now!")
+            
             self.textView.text = "You can say something now"
             audioData = NSMutableData()
             _ = AudioController.sharedInstance.prepare(specifiedSampleRate: Int(SAMPLE_RATE))
