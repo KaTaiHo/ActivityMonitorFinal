@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 import UIKit
 import AVFoundation
 import googleapis
@@ -40,6 +41,11 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     let synth = AVSpeechSynthesizer()
     let canSpeak = CanSpeak()
+    let audioSession = AVAudioSession.sharedInstance()
+    
+    var needToCheckInput = true
+    
+    var timerForRecording = Timer()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,18 +55,22 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         userId = FIRAuth.auth()?.currentUser?.uid
         textView.isEditable = false
         setupSessionForRecording()
+        
     }
     
     @IBAction func recordAudio(_ sender: NSObject) {
         print("button pressed")
+        SpeechRecognitionService.sharedInstance.sampleRate = Int(SAMPLE_RATE)
         startButton.alpha = 0.5
         startButton.isUserInteractionEnabled = false
         pauseButton.alpha = 1
         pauseButton.isUserInteractionEnabled = true
         
         backgroundTask.startBackgroundTask()
+//        checkUserInput()
         askUser()
-        textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 1800, target: self, selector: #selector(self.askUser), userInfo: nil, repeats: true)
+        textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 60, target: self, selector: #selector(self.askUser), userInfo: nil, repeats: true)
+        
         _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
         self.sessionStarted = true
     }
@@ -71,7 +81,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func setupSessionForRecording() {
-        let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth])
         } catch {
@@ -103,7 +112,26 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     func askUser() {
         backgroundTask.pauseBackgroundTask()
-        self.canSpeak.sayThis("Hello, What are you doing right now?")
+        needToCheckInput = true
+        self.canSpeak.sayThis("Hello, What are you doing right now?", speed: 0.5)
+    }
+    
+    func askUserAgain() {
+        backgroundTask.pauseBackgroundTask()
+        needToCheckInput = true
+        self.canSpeak.sayThis("Could you please repeat what you said?", speed: 0.3)
+    }
+    
+    func checkUserInput(){
+        
+        if needToCheckInput {
+            backgroundTask.pauseBackgroundTask()
+            let firstResponse = self.userInput
+            needToCheckInput = false
+            self.canSpeak.sayThis("Did you say" + self.userInput, speed: 0.3)
+            
+            print("user said " + self.userInput)
+        }
     }
     
     @IBAction func cancelPost(_ sender: Any) {
@@ -137,11 +165,11 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         self.sessionStarted = false
     }
     
-    func recordUser() {
+    func promptUser() {
+        self.userInput = ""
+        
         if !self.synth.isSpeaking {
 
-//            setupSessionForRecordingp()
-            let audioSession = AVAudioSession.sharedInstance()
             do {
                 try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth])
             } catch {
@@ -152,27 +180,26 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             
             self.textView.text = "You can say something now"
             audioData = NSMutableData()
+            
             _ = AudioController.sharedInstance.prepare(specifiedSampleRate: Int(SAMPLE_RATE))
-            SpeechRecognitionService.sharedInstance.sampleRate = Int(SAMPLE_RATE)
             _ = AudioController.sharedInstance.start()
             
             if #available(iOS 10.0, *) {
-                _ = Timer.scheduledTimer(withTimeInterval: 20, repeats: false, block: { (timer) in
+                self.timerForRecording = Timer.scheduledTimer(withTimeInterval: 20, repeats: false, block: { (timer) in
                     self.stopAudioTemp()
-                    print("in timer")
+                    print("timer Stopped")
                     do {
                         if self.userInput == "" {
                             print("no response from the user")
                             self.userInput = "No Response From User"
                             self.textView.text = self.userInput
-                            let audioSession = AVAudioSession.sharedInstance()
-                            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
-//                            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+                            try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
                             self.backgroundTask.startBackgroundTask()
                             self.addPostFunc()
                             print("after 20 seconds")
                         }
-                        self.userInput = ""
+                        
+//                        self.userInput = ""
                     } catch {
                         // handle errors
                     }
@@ -225,12 +252,14 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         var finished = false
                         //                        print(response)
                         for result in response.resultsArray! {
+                            print ("processing data")
                             if let result = result as? StreamingRecognitionResult {
                                 if result.isFinal {
                                     finished = true
                                     let test = result.alternativesArray[0] as! SpeechRecognitionAlternative
                                     print ("data: " + String(describing: test.transcript!))
                                     strongSelf.userInput = String(describing: test.transcript!)
+
                                 }
                             }
                         }
@@ -238,18 +267,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         
                         if finished {
                             strongSelf.textView.text = self?.userInput
+                            print("done recording")
                             strongSelf.doneWithRecording()
-//                            strongSelf.textView.text = self?.userInput
-//                            strongSelf.stopAudioTemp()
-//                            do {
-//                                print ("finished recording")
-//                                let audioSession = AVAudioSession.sharedInstance()
-//                                try audioSession.setCategory(AVAudioSessionCategoryPlayback)
-//                                self?.backgroundTask.startBackgroundTask()
-//                                self?.addPostFunc()
-//                            } catch {
-//                                // handle errors
-//                            }
                         }
                     }
             })
@@ -258,19 +277,36 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func speechDidFinish() {
-        self.recordUser()
+        print ("prompting user")
+        self.promptUser()
     }
     
     func doneWithRecording() {
+        self.timerForRecording.invalidate()
         self.stopAudioTemp()
         do {
             print ("finished recording")
-            let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
-            self.backgroundTask.startBackgroundTask()
-            self.addPostFunc()
+            
+            if needToCheckInput {
+                checkUserInput()
+                
+                // callback hell to ask the user again if they can't confirm what they said
+                if self.userInput == "yes" {
+                    print ("Post confirmed")
+                    self.addPostFunc()
+                    self.backgroundTask.startBackgroundTask()
+                }
+                else {
+                    self.askUserAgain()
+                }
+                
+                print ("uploaded: " + self.userInput)
+            }
+            
         } catch {
             // handle errors
+            print ("error happened in doneWithRecoring")
         }
     }
     

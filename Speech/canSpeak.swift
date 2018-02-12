@@ -27,10 +27,10 @@ class CanSpeak: NSObject, AVSpeechSynthesizerDelegate {
         self.voiceSynth.delegate = self
     }
     
-    func sayThis(_ phrase: String){
+    func sayThis(_ phrase: String, speed: Float){
         let utterance = AVSpeechUtterance(string: phrase)
         utterance.voice = voiceToUse
-        utterance.rate = 0.5
+        utterance.rate = speed
         voiceSynth.speak(utterance)
     }
     

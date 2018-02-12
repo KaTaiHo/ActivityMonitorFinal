@@ -12,6 +12,7 @@ import FirebaseDatabase
 
 class MainViewController: UIViewController {
 
+    @IBOutlet weak var errorLabel: UILabel!
     @IBOutlet weak var _prefname: UITextField!
     @IBOutlet weak var signInSelector: UISegmentedControl!
     @IBOutlet weak var _username: UITextField!
@@ -60,8 +61,10 @@ class MainViewController: UIViewController {
                 FIRAuth.auth()?.signIn(withEmail: email, password: pass, completion: {(user, error) in
                     if user != nil {
                         self.performSegue(withIdentifier: "goToData", sender: self)
+                        self.errorLabel.text = ""
                     }
                     else {
+                        self.errorLabel.text = error!.localizedDescription
                         print("error trying to login")
                     }
                 })
@@ -73,8 +76,13 @@ class MainViewController: UIViewController {
                         if user != nil {
                             if error != nil {
                                 print(error!.localizedDescription)
+                                self.errorLabel.text = error!.localizedDescription
                                 return
                             }
+                            else {
+                                self.errorLabel.text = ""
+                            }
+
                             let userReference = self.ref?.child("users")
                             let uid = user?.uid
                             let newUserReference = userReference?.child(uid!)
