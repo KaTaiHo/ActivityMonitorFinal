@@ -42,10 +42,13 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     let synth = AVSpeechSynthesizer()
     let canSpeak = CanSpeak()
     let audioSession = AVAudioSession.sharedInstance()
+    var firstResponse = ""
     
     var needToCheckInput = true
     
     var timerForRecording = Timer()
+    
+    let semaphore = DispatchSemaphore(value: 1)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -119,19 +122,19 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     func askUserAgain() {
         backgroundTask.pauseBackgroundTask()
         needToCheckInput = true
-        self.canSpeak.sayThis("Could you please repeat what you said?", speed: 0.3)
+        self.canSpeak.sayThis("Could you please repeat what you said?", speed: 0.5)
     }
     
     func checkUserInput(){
         
-        if needToCheckInput {
-            backgroundTask.pauseBackgroundTask()
-            let firstResponse = self.userInput
-            needToCheckInput = false
-            self.canSpeak.sayThis("Did you say" + self.userInput, speed: 0.3)
-            
-            print("user said " + self.userInput)
-        }
+        backgroundTask.pauseBackgroundTask()
+        firstResponse = self.userInput
+        semaphore.wait()
+//        needToCheckInput = false
+        semaphore.signal()
+        self.canSpeak.sayThis("Did you say" + self.userInput, speed: 0.5)
+        
+        print("user said " + self.userInput)
     }
     
     @IBAction func cancelPost(_ sender: Any) {
@@ -288,17 +291,25 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             print ("finished recording")
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             
+            semaphore.wait()
+            semaphore.signal()
+            print ("need to check: " + String(needToCheckInput))
             if needToCheckInput {
-                checkUserInput()
+                print ("need to check: " + String(needToCheckInput) + " inside")
                 
                 // callback hell to ask the user again if they can't confirm what they said
+
                 if self.userInput == "yes" {
                     print ("Post confirmed")
+                    self.userInput = firstResponse
                     self.addPostFunc()
                     self.backgroundTask.startBackgroundTask()
                 }
-                else {
+                else if self.userInput == "no"{
                     self.askUserAgain()
+                }
+                else {
+                    checkUserInput()
                 }
                 
                 print ("uploaded: " + self.userInput)

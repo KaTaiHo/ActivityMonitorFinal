@@ -76,7 +76,7 @@ class ViewController : UIViewController, AudioControllerDelegate, CanSpeakDelega
     
     func askUser() {
         setupSessionForRecording()
-        self.canSpeak.sayThis("Hello, What are you doing right now?")
+        self.canSpeak.sayThis("Hello, What are you doing right now?", speed: 0.5)
     }
     
     func recordUser() {
