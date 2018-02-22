@@ -24,22 +24,19 @@ import MicrosoftBand
 //let SAMPLE_RATE = 16000
 let SAMPLE_RATE = 44100.0
 
-class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpeakDelegate, ConnectionDelegate {
+class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpeakDelegate, ConnectionDelegate, MSBClientManagerDelegate, MSBClientTileDelegate {
+    
+    
     @IBOutlet weak var textView: UITextView!
     @IBOutlet weak var startButton: UIButton!
     @IBOutlet weak var pauseButton: UIButton!
     
-    
-    var mband: MicrosoftBand!
-    let tileId      = UUID(uuidString: "be2066df-306f-438e-860c-f82a8bc0bd6a")
-    let tileName    = "Wearable Hub"
-    let tileIcon    = "A"
-    let smallIcon   = "Aa"
-    
-    
-    
     var userId: String?
     var ref: DatabaseReference?
+    
+    weak var client: MSBClient?
+    
+    let tileID = NSUUID(uuidString: "CDBDBA9F-12FD-47A5-8453-E7270A43BB99")
     
     var audioData: NSMutableData!
     var textToSpeechTimerBackground = Timer()
@@ -60,6 +57,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     let semaphore = DispatchSemaphore(value: 1)
     
+    var askUserFlag = true
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.canSpeak.delegate = self
@@ -69,90 +68,47 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         textView.isEditable = false
         setupSessionForRecording()
         
-        let mband = MicrosoftBand()
-        self.mband = mband;
-        self.mband.connectDelegate = self
-        
-        do {
-            _ = try  mband.connect()
-        } catch ConnectionError.BluetoothUnavailable {
-            print("BluetoothUnavailable...")
-        } catch ConnectionError.DeviceUnavailable {
-            print("DeviceUnavailable...")
-        } catch {
-            print("any Error")
+        MSBClientManager.shared().delegate = self
+        if let client = MSBClientManager.shared().attachedClients().first as? MSBClient {
+            self.client = client
+            // 2. Set Tile Event Delegate
+            client.tileDelegate = self;
+            
+            MSBClientManager.shared().connect(self.client)
+            print("Please wait. Connecting to Band...")
+        } else {
+            print("Failed! No Bands attached.")
         }
-        
-        
-        print("isBluetoothOn \(self.mband.isBluetoothOn())")
-        print("name \(self.mband.name)")
-        print("deviceIdentifier \(self.mband.deviceIdentifier)")
-        
-        self.mband.sendBandNotification(tileId: self.mband.deviceIdentifier, title: "Question", body: "Are you free right now?")
-        
     }
     
-    func onConnecte(){
-        print("onConnecte...")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
-            print("hardwareVersion \(self.mband.hardwareVersion)")
-            print("firmwareVersion \(self.mband.firmwareVersion)")
-        }
-        self.mband.requestUserConsent() { result in
-            if(result) {
-                print("requestUserConsent...\(result), calling HR")
-                try! self.mband.startHeartRateUpdates() {  (data, error) in
-                    if ((error) != nil) {
-                        print("heartRate error \(String(describing: error))")
-                    } else {
-                        print("heartRate data \(data) \(String(describing: data?.heartRate)) \(String(describing: data?.quality))")
-                    }
-                }
-                
-            }
-        }
-        self.mband.sendHaptic()
-        
-        self.mband.sendHaptic() { error in
-            print("[MSB] Error sendHaptic: \(String(describing: error))")
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
-            self.mband.addTile(tileId: self.tileId!, tileName: self.tileName, tileIcon: self.tileIcon, smallIcon: self.smallIcon) {  error in
-                print("[MSB] Error addTile: \(String(describing: error))")
-            }
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
-            
-            print ("title of band " + String(describing: self.tileId!))
-            self.mband.sendBandNotification(tileId: self.tileId!, title: "sumo", body: "good work 123 3333 3333 ") { error in
-                print("[MSB] Error sendBandNotification: \(String(describing: error))")
-            }
-        }
-        
-    }
     
     @IBAction func recordAudio(_ sender: NSObject) {
-        print("button pressed")
-        SpeechRecognitionService.sharedInstance.sampleRate = Int(SAMPLE_RATE)
-        startButton.alpha = 0.5
-        startButton.isUserInteractionEnabled = false
-        pauseButton.alpha = 1
-        pauseButton.isUserInteractionEnabled = true
-        
-        backgroundTask.startBackgroundTask()
-//        checkUserInput()
-        askUser()
-        textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 60, target: self, selector: #selector(self.askUser), userInfo: nil, repeats: true)
-        
-        _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
-        self.sessionStarted = true
+        if client?.isDeviceConnected == true {
+            print("button pressed")
+            SpeechRecognitionService.sharedInstance.sampleRate = Int(SAMPLE_RATE)
+            startButton.alpha = 0.5
+            startButton.isUserInteractionEnabled = false
+            pauseButton.alpha = 1
+            pauseButton.isUserInteractionEnabled = true
+            
+            backgroundTask.startBackgroundTask()
+            //        checkUserInput()
+            MBandSetUp()
+            textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 60, target: self, selector: #selector(self.MBandSetUp), userInfo: nil, repeats: true)
+            
+            _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
+            self.sessionStarted = true
+        }
+        // tell the user to wait for the band to connect TODO
     }
     
     func clockTick() {
         clockTimer = clockTimer + 30
         print (String(clockTimer / 60) + " minutes and " +  String(clockTimer % 60) + " seconds have passed")
+    }
+    
+    func MBSBaskUser() {
+        MBandSetUp()
     }
     
     func setupSessionForRecording() {
@@ -186,7 +142,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func askUser() {
-        self.mband.sendBandNotification(tileId: self.mband.deviceIdentifier, title: "Question", body: "Are you free right now?")
     
         backgroundTask.pauseBackgroundTask()
         
@@ -243,6 +198,108 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         self.sessionStarted = false
     }
     
+    func MBandSetUp() {
+        print ("button pressed")
+        if let client = self.client {
+            print("inside client")
+            if client.isDeviceConnected == false {
+                print("Band is not connected. Please wait....")
+                return
+            }
+            print("Button tile...")
+            let tileName = "D tile"
+            let titleIcon = try? MSBIcon(uiImage: UIImage(named:"D.png")) 
+            let smallIcon = try? MSBIcon(uiImage: UIImage(named:"Dd.png"))
+            
+            let tile = try? MSBTile(id: tileID! as UUID, name: tileName, tileIcon: titleIcon, smallIcon: smallIcon)
+            tile?.isBadgingEnabled
+            
+            let textBlock = MSBPageTextBlock(rect: MSBPageRect(x: 0, y: 0, width: 200, height: 40), font: MSBPageTextBlockFont.small)
+            textBlock?.elementId = 10
+            //            textBlock?.color = MSBColor.colorWithUIColor(UIColor.redColor) as! MSBColor!
+            textBlock?.margins = MSBPageMargins(left: 5, top: 2, right: 5, bottom: 2)
+            
+            let button = MSBPageTextButton(rect: MSBPageRect(x: 0, y: 0, width: 200, height: 40))
+            button?.elementId = 11
+            button?.horizontalAlignment = MSBPageHorizontalAlignment.center
+            //            button?.pressedColor = MSBColor.colorWithUIColor(UIColor.purpleColor) as! MSBColor!
+            button?.margins = MSBPageMargins(left: 5, top: 2, right: 5, bottom: 2)
+            
+            let flowList = MSBPageFlowPanel(rect: MSBPageRect(x: 15, y: 0, width: 230, height: 105))
+            flowList?.addElement(textBlock)
+            flowList?.addElement(button)
+            
+            let page = MSBPageLayout()
+            page.root = flowList
+            tile?.pageLayouts.add(page)
+//            print (String(describing: tile!))
+            
+            client.tileManager.add(tile!, completionHandler: { (error) in
+                
+                guard let msbError = error as? NSError! else {}
+                
+                if error == nil || MSBErrorType(rawValue: msbError.code) == (MSBErrorType.tileAlreadyExist){
+                    print("Creating page...")
+                    
+                    let pageID = UUID(uuidString: "1234BA9F-12FD-47A5-83A9-E7270A43BB99")
+                    
+                    let pageValues = [try?MSBPageTextButtonData(elementId: 11, text: "Yes"), try?MSBPageTextBlockData(elementId: 10, text: "Are you busy?")]
+                    
+                    let page = MSBPageData(id: pageID, layoutIndex: 0, value: pageValues)
+                    
+                    client.tileManager.setPages([page], tileId: tile!.tileId, completionHandler: { (error) in
+                        if error != nil {
+                            print("Error setting page: \(error)")
+                        } else {
+                            print("Successfully Finished!!!")
+                            print("You can press the button on the D Tile to observe Tile Events,")
+                            print("or remove the tile via Microsoft Health App.")
+                        }
+                    })
+                    
+                    client.notificationManager.sendMessage(withTileID: tile!.tileId!, title: "Activity Monitor", body: "Hi, Can I can you a question?", timeStamp: Date(), flags: .showDialog) { error in
+                        if (error != nil) {
+                            print ("error in sending notification " + String(describing: error))
+                        }
+                    }
+                    
+                    if #available(iOS 10.0, *) {
+                        _ = Timer.scheduledTimer(withTimeInterval: 10, repeats: false, block: { (timer) in
+                            client.tileManager.removePages(inTile: tile!.tileId!, completionHandler: { (error) in
+                                if (error != nil) {
+                                    print (String(describing: error))
+                                }
+                                print("timer has ended")
+                                
+                                if self.askUserFlag == true {
+                                    self.askUser()
+                                }
+                                else {
+                                    print ("The user is busy")
+                                }
+                                
+                                self.askUserFlag = true
+                            })
+                        })
+                    } else {
+                        // Fallback on earlier versions
+                    }
+                    
+                }
+                else {
+                    print (error!)
+                }
+            })
+            
+        }
+        else {
+            print("Band is not connected. Please wait....")
+        }
+        
+        
+        print("button has been added")
+    }
+    
     func promptUser() {
         self.userInput = ""
         
@@ -255,7 +312,11 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             }
             
             print ("You can say something now!")
-            self.mband.sendHaptic()
+            client?.notificationManager.vibrate(with: MSBNotificationVibrationType.twoToneHigh) { error in
+                if (error != nil) {
+                    print(error)
+                }
+            }
             
             self.textView.text = "You can say something now"
             audioData = NSMutableData()
@@ -410,5 +471,38 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         let stringReferenceArr = String(describing: idReference!).components(separatedBy: "/")
         let stringReference = stringReferenceArr[stringReferenceArr.count - 1]
         idReference!.setValue(["message": self.userInput, "date": todayString, "hour": hour, "minutes": minutes, "reference" : stringReference])
+    }
+    
+    // MARK - Client Manager Delegates
+    func clientManager(_ clientManager: MSBClientManager!, clientDidConnect client: MSBClient!) {
+        print("Band connected.")
+    }
+    
+    func clientManager(_ clientManager: MSBClientManager!, clientDidDisconnect client: MSBClient!) {
+        print("Band disconnected.")
+    }
+    
+    func clientManager(_ clientManager: MSBClientManager!, client: MSBClient!, didFailToConnectWithError error: Error!) {
+        print("Failed to connect to Band.")
+    }
+    
+    // MARK - Client Tile Delegate
+    func client(_ client: MSBClient!, buttonDidPress event: MSBTileButtonEvent!) {
+        print("\(event.description)")
+        print("button pressed")
+        client.tileManager.removePages(inTile: tileID! as UUID, completionHandler: { (error) in
+            if (error != nil) {
+                print (String(describing: error))
+            }
+        })
+        self.askUserFlag = false
+    }
+    
+    @objc(client:tileDidOpen:) func client(_ client: MSBClient!, tileDidOpen  event: MSBTileEvent!) {
+        print("\(event.description)")
+    }
+    
+    func client(_ client: MSBClient!, tileDidClose event: MSBTileEvent!) {
+        print("\(event.description)")
     }
 }

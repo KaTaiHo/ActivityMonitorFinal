@@ -4,3 +4,5 @@
 
 #import <googleapis/CloudSpeech.pbobjc.h>
 #import <googleapis/CloudSpeech.pbrpc.h>
+
+#import <MicrosoftBandKit_iOS/MicrosoftBandKit_iOS.h>
