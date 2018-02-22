@@ -1,27 +1,39 @@
+#if !GPB_GRPC_FORWARD_DECLARE_MESSAGE_PROTO
 #import <googleapis/CloudSpeech.pbobjc.h>
+#endif
 
 #import <ProtoRPC/ProtoService.h>
+#import <ProtoRPC/ProtoRPC.h>
 #import <RxLibrary/GRXWriteable.h>
 #import <RxLibrary/GRXWriter.h>
 
-#import <googleapis/Annotations.pbobjc.h>
-#import <googleapis/Operations.pbobjc.h>
-#if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
-  #import <Protobuf/Any.pbobjc.h>
+#if GPB_GRPC_FORWARD_DECLARE_MESSAGE_PROTO
+  @class LongRunningRecognizeRequest;
+  @class Operation;
+  @class RecognizeRequest;
+  @class RecognizeResponse;
+  @class StreamingRecognizeRequest;
+  @class StreamingRecognizeResponse;
 #else
-  #import "google/protobuf/Any.pbobjc.h"
+  #import <googleapis/Annotations.pbobjc.h>
+  #import <googleapis/Operations.pbobjc.h>
+  #if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
+    #import <Protobuf/Any.pbobjc.h>
+  #else
+    #import "google/protobuf/Any.pbobjc.h"
+  #endif
+  #if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
+    #import <Protobuf/Duration.pbobjc.h>
+  #else
+    #import <googleapis/Duration.pbobjc.h>
+  #endif
+  #if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
+    #import <Protobuf/Timestamp.pbobjc.h>
+  #else
+    #import "google/protobuf/Timestamp.pbobjc.h"
+  #endif
+  #import <googleapis/Status.pbobjc.h>
 #endif
-#if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
-  #import <Protobuf/Duration.pbobjc.h>
-#else
-  #import "google/protobuf/Duration.pbobjc.h"
-#endif
-#if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
-  #import <Protobuf/Timestamp.pbobjc.h>
-#else
-  #import "google/protobuf/Timestamp.pbobjc.h"
-#endif
-#import <googleapis/Status.pbobjc.h>
 
 
 NS_ASSUME_NONNULL_BEGIN

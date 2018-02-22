@@ -53,11 +53,15 @@
 
 #include <openssl/mem.h>
 
+#include "../internal.h"
+
 
 /* kDefaultIV is the default IV value given in RFC 3394, 2.2.3.1. */
 static const uint8_t kDefaultIV[] = {
     0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6,
 };
+
+static const unsigned kBound = 6;
 
 int AES_wrap_key(const AES_KEY *key, const uint8_t *iv, uint8_t *out,
                  const uint8_t *in, size_t in_len) {
@@ -71,15 +75,15 @@ int AES_wrap_key(const AES_KEY *key, const uint8_t *iv, uint8_t *out,
     iv = kDefaultIV;
   }
 
-  memmove(out + 8, in, in_len);
+  OPENSSL_memmove(out + 8, in, in_len);
   uint8_t A[AES_BLOCK_SIZE];
-  memcpy(A, iv, 8);
+  OPENSSL_memcpy(A, iv, 8);
 
   size_t n = in_len / 8;
 
-  for (unsigned j = 0; j < 6; j++) {
+  for (unsigned j = 0; j < kBound; j++) {
     for (size_t i = 1; i <= n; i++) {
-      memcpy(A + 8, out + 8 * i, 8);
+      OPENSSL_memcpy(A + 8, out + 8 * i, 8);
       AES_encrypt(A, A, key);
 
       uint32_t t = (uint32_t)(n * j + i);
@@ -87,11 +91,11 @@ int AES_wrap_key(const AES_KEY *key, const uint8_t *iv, uint8_t *out,
       A[6] ^= (t >> 8) & 0xff;
       A[5] ^= (t >> 16) & 0xff;
       A[4] ^= (t >> 24) & 0xff;
-      memcpy(out + 8 * i, A + 8, 8);
+      OPENSSL_memcpy(out + 8 * i, A + 8, 8);
     }
   }
 
-  memcpy(out, A, 8);
+  OPENSSL_memcpy(out, A, 8);
   return (int)in_len + 8;
 }
 
@@ -108,21 +112,21 @@ int AES_unwrap_key(const AES_KEY *key, const uint8_t *iv, uint8_t *out,
   }
 
   uint8_t A[AES_BLOCK_SIZE];
-  memcpy(A, in, 8);
-  memmove(out, in + 8, in_len - 8);
+  OPENSSL_memcpy(A, in, 8);
+  OPENSSL_memmove(out, in + 8, in_len - 8);
 
   size_t n = (in_len / 8) - 1;
 
-  for (unsigned j = 5; j < 6; j--) {
+  for (unsigned j = kBound - 1; j < kBound; j--) {
     for (size_t i = n; i > 0; i--) {
       uint32_t t = (uint32_t)(n * j + i);
       A[7] ^= t & 0xff;
       A[6] ^= (t >> 8) & 0xff;
       A[5] ^= (t >> 16) & 0xff;
       A[4] ^= (t >> 24) & 0xff;
-      memcpy(A + 8, out + 8 * (i - 1), 8);
+      OPENSSL_memcpy(A + 8, out + 8 * (i - 1), 8);
       AES_decrypt(A, A, key);
-      memcpy(out + 8 * (i - 1), A + 8, 8);
+      OPENSSL_memcpy(out + 8 * (i - 1), A + 8, 8);
     }
   }
 

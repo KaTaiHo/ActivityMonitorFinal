@@ -19,17 +19,27 @@ import AVFoundation
 import googleapis
 import FirebaseAuth
 import FirebaseDatabase
+import MicrosoftBand
 
 //let SAMPLE_RATE = 16000
 let SAMPLE_RATE = 44100.0
 
-class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpeakDelegate {
+class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpeakDelegate, ConnectionDelegate {
     @IBOutlet weak var textView: UITextView!
     @IBOutlet weak var startButton: UIButton!
     @IBOutlet weak var pauseButton: UIButton!
     
+    
+    var mband: MicrosoftBand!
+    let tileId      = UUID(uuidString: "be2066df-306f-438e-860c-f82a8bc0bd6a")
+    let tileName    = "Wearable Hub"
+    let tileIcon    = "A"
+    let smallIcon   = "Aa"
+    
+    
+    
     var userId: String?
-    var ref: FIRDatabaseReference?
+    var ref: DatabaseReference?
     
     var audioData: NSMutableData!
     var textToSpeechTimerBackground = Timer()
@@ -54,10 +64,72 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         super.viewDidLoad()
         self.canSpeak.delegate = self
         AudioController.sharedInstance.delegate = self
-        ref = FIRDatabase.database().reference()
-        userId = FIRAuth.auth()?.currentUser?.uid
+        ref = Database.database().reference()
+        userId = Auth.auth().currentUser?.uid
         textView.isEditable = false
         setupSessionForRecording()
+        
+        let mband = MicrosoftBand()
+        self.mband = mband;
+        self.mband.connectDelegate = self
+        
+        do {
+            _ = try  mband.connect()
+        } catch ConnectionError.BluetoothUnavailable {
+            print("BluetoothUnavailable...")
+        } catch ConnectionError.DeviceUnavailable {
+            print("DeviceUnavailable...")
+        } catch {
+            print("any Error")
+        }
+        
+        
+        print("isBluetoothOn \(self.mband.isBluetoothOn())")
+        print("name \(self.mband.name)")
+        print("deviceIdentifier \(self.mband.deviceIdentifier)")
+        
+        self.mband.sendBandNotification(tileId: self.mband.deviceIdentifier, title: "Question", body: "Are you free right now?")
+        
+    }
+    
+    func onConnecte(){
+        print("onConnecte...")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
+            print("hardwareVersion \(self.mband.hardwareVersion)")
+            print("firmwareVersion \(self.mband.firmwareVersion)")
+        }
+        self.mband.requestUserConsent() { result in
+            if(result) {
+                print("requestUserConsent...\(result), calling HR")
+                try! self.mband.startHeartRateUpdates() {  (data, error) in
+                    if ((error) != nil) {
+                        print("heartRate error \(String(describing: error))")
+                    } else {
+                        print("heartRate data \(data) \(String(describing: data?.heartRate)) \(String(describing: data?.quality))")
+                    }
+                }
+                
+            }
+        }
+        self.mband.sendHaptic()
+        
+        self.mband.sendHaptic() { error in
+            print("[MSB] Error sendHaptic: \(String(describing: error))")
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
+            self.mband.addTile(tileId: self.tileId!, tileName: self.tileName, tileIcon: self.tileIcon, smallIcon: self.smallIcon) {  error in
+                print("[MSB] Error addTile: \(String(describing: error))")
+            }
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
+            
+            print ("title of band " + String(describing: self.tileId!))
+            self.mband.sendBandNotification(tileId: self.tileId!, title: "sumo", body: "good work 123 3333 3333 ") { error in
+                print("[MSB] Error sendBandNotification: \(String(describing: error))")
+            }
+        }
         
     }
     
@@ -114,7 +186,10 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func askUser() {
+        self.mband.sendBandNotification(tileId: self.mband.deviceIdentifier, title: "Question", body: "Are you free right now?")
+    
         backgroundTask.pauseBackgroundTask()
+        
         needToCheckInput = true
         self.canSpeak.sayThis("Hello, What are you doing right now?", speed: 0.5)
     }
@@ -180,6 +255,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             }
             
             print ("You can say something now!")
+            self.mband.sendHaptic()
             
             self.textView.text = "You can say something now"
             audioData = NSMutableData()

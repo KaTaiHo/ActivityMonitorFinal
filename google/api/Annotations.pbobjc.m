@@ -13,7 +13,7 @@
  #import "GPBProtocolBuffers_RuntimeSupport.h"
 #endif
 
- #import <googleapis/Annotations.pbobjc.h>
+ #import "google/api/Annotations.pbobjc.h"
  #import "google/api/HTTP.pbobjc.h"
  #import "google/protobuf/Descriptor.pbobjc.h"
 // @@protoc_insertion_point(imports)
@@ -30,7 +30,7 @@
   // about thread safety and initialization of registry.
   static GPBExtensionRegistry* registry = nil;
   if (!registry) {
-    GPBDebugCheckRuntimeVersion();
+    GPB_DEBUG_CHECK_RUNTIME_VERSIONS();
     registry = [[GPBExtensionRegistry alloc] init];
     static GPBExtensionDescription descriptions[] = {
       {
@@ -41,7 +41,7 @@
         .enumDescriptorFunc = NULL,
         .fieldNumber = 72295728,
         .dataType = GPBDataTypeMessage,
-        .options = 0,
+        .options = GPBExtensionNone,
       },
     };
     for (size_t i = 0; i < sizeof(descriptions) / sizeof(descriptions[0]); ++i) {
@@ -51,8 +51,8 @@
       [self globallyRegisterExtension:extension];
       [extension release];
     }
-    [registry addExtensions:[HTTPRoot extensionRegistry]];
-    [registry addExtensions:[GPBDescriptorRoot extensionRegistry]];
+    // None of the imports (direct or indirect) defined extensions, so no need to add
+    // them to this registry.
   }
   return registry;
 }

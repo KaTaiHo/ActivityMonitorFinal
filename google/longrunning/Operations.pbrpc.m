@@ -1,7 +1,20 @@
 #import "google/longrunning/Operations.pbrpc.h"
+#import "google/longrunning/Operations.pbobjc.h"
 
 #import <ProtoRPC/ProtoRPC.h>
 #import <RxLibrary/GRXWriter+Immediate.h>
+#import "google/api/Annotations.pbobjc.h"
+#if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
+  #import <Protobuf/Any.pbobjc.h>
+#else
+  #import "google/protobuf/Any.pbobjc.h"
+#endif
+#if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
+  #import <Protobuf/Empty.pbobjc.h>
+#else
+  #import "google/protobuf/Empty.pbobjc.h"
+#endif
+#import "google/rpc/Status.pbobjc.h"
 
 @implementation Operations
 

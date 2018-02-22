@@ -13,6 +13,7 @@
 #import "GRXBufferedPipe.h"
 #import "GRXConcurrentWriteable.h"
 #import "GRXForwardingWriter.h"
+#import "GRXImmediateSingleWriter.h"
 #import "GRXImmediateWriter.h"
 #import "GRXWriteable.h"
 #import "GRXWriter+Immediate.h"

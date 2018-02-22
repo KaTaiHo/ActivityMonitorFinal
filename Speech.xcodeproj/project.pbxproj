@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2C450CC6320CA9890051ABAF /* Pods_Speech.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0B7F558BD8BC89862C8C277 /* Pods_Speech.framework */; };
+		4B9A561520376C3A0071D8A2 /* MicrosoftBandKit_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B9A561420376C390071D8A2 /* MicrosoftBandKit_iOS.framework */; };
 		4BF0D7DB1FE63DC60006BA2C /* canSpeak.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7DA1FE63DC60006BA2C /* canSpeak.swift */; };
 		4BF0D7DD1FE63DCE0006BA2C /* backgroundTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7DC1FE63DCE0006BA2C /* backgroundTask.swift */; };
 		4BF0D7E11FE63FBD0006BA2C /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7E01FE63FBD0006BA2C /* MainViewController.swift */; };
@@ -28,6 +29,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4B9A561420376C390071D8A2 /* MicrosoftBandKit_iOS.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MicrosoftBandKit_iOS.framework; sourceTree = "<group>"; };
 		4BF0D7DA1FE63DC60006BA2C /* canSpeak.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = canSpeak.swift; sourceTree = "<group>"; };
 		4BF0D7DC1FE63DCE0006BA2C /* backgroundTask.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = backgroundTask.swift; sourceTree = "<group>"; };
 		4BF0D7E01FE63FBD0006BA2C /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
@@ -61,6 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4B9A561520376C3A0071D8A2 /* MicrosoftBandKit_iOS.framework in Frameworks */,
 				4BF0D7F11FE65B710006BA2C /* AudioToolbox.framework in Frameworks */,
 				4BF0D7EF1FE65B650006BA2C /* AVFoundation.framework in Frameworks */,
 				2C450CC6320CA9890051ABAF /* Pods_Speech.framework in Frameworks */,
@@ -73,6 +76,7 @@
 		32C6BA1B2FA20A9904F13B95 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4B9A561420376C390071D8A2 /* MicrosoftBandKit_iOS.framework */,
 				4BF0D7F01FE65B710006BA2C /* AudioToolbox.framework */,
 				4BF0D7EE1FE65B650006BA2C /* AVFoundation.framework */,
 				54C3D1E96C8C43AB14662311 /* libPods.a */,
@@ -269,7 +273,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 		D8EE167099E5A7E524284D70 /* [CP] Copy Pods Resources */ = {
@@ -415,6 +419,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = 8VL3S4GR48;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				"HEADER_SEARCH_PATHS[arch=*]" = (
 					"$(inherited)",
 					"\"${PODS_ROOT}/Headers/Public\"",
@@ -438,6 +446,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = 8VL3S4GR48;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = Speech/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.katai.research;

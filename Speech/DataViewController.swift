@@ -15,8 +15,8 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
     @IBOutlet weak var tableView: UITableView!
     var postData = [String]()
     var referenceArr = [String]()
-    var ref:FIRDatabaseReference?
-    var databaseHandle:FIRDatabaseHandle?
+    var ref:DatabaseReference?
+    var databaseHandle:DatabaseHandle?
     
     struct activityData {
         var activity:String
@@ -34,12 +34,12 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         tableView.delegate = self;
         tableView.dataSource = self;
-        ref = FIRDatabase.database().reference()
-        let userId = FIRAuth.auth()?.currentUser?.uid
+        ref = Database.database().reference()
+        let userId = Auth.auth().currentUser?.uid
         
         ref?.child("users").child(userId!).child("Posts").observeSingleEvent(of: .value, with: { snapshot in
             print(snapshot.childrenCount) // I got the expected number of items
-            for rest in snapshot.children.allObjects as! [FIRDataSnapshot] {
+            for rest in snapshot.children.allObjects as! [DataSnapshot] {
                 guard let restDict = rest.value as? [String: Any] else { continue }
                 print(restDict)
                 let message = restDict["message"] as? String
@@ -73,21 +73,21 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     
     @IBAction func logout(_ sender: UIBarButtonItem) {
-        try! FIRAuth.auth()!.signOut()
+        try! Auth.auth().signOut()
         presentingViewController?.dismiss(animated: true, completion: nil)
     }
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == UITableViewCellEditingStyle.delete {
             
-            guard let uid = FIRAuth.auth()?.currentUser?.uid else {
+            guard let uid = Auth.auth().currentUser?.uid else {
                 return
             }
             
             let post = self.referenceArr[indexPath.row]
             print(post)
             
-            FIRDatabase.database().reference().child("users").child(uid).child("Posts").child(post).removeValue(completionBlock: { (error, ref) in
+            Database.database().reference().child("users").child(uid).child("Posts").child(post).removeValue(completionBlock: { (error, ref) in
                 if error != nil {
                     print("Failed to Delete Message", error!)
                     return

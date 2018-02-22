@@ -1,7 +1,26 @@
 #import "google/cloud/speech/v1/CloudSpeech.pbrpc.h"
+#import "google/cloud/speech/v1/CloudSpeech.pbobjc.h"
 
 #import <ProtoRPC/ProtoRPC.h>
 #import <RxLibrary/GRXWriter+Immediate.h>
+#import "google/api/Annotations.pbobjc.h"
+#import "google/longrunning/Operations.pbobjc.h"
+#if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
+  #import <Protobuf/Any.pbobjc.h>
+#else
+  #import "google/protobuf/Any.pbobjc.h"
+#endif
+#if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
+  #import <Protobuf/Duration.pbobjc.h>
+#else
+  #import "google/protobuf/Duration.pbobjc.h"
+#endif
+#if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
+  #import <Protobuf/Timestamp.pbobjc.h>
+#else
+  #import "google/protobuf/Timestamp.pbobjc.h"
+#endif
+#import "google/rpc/Status.pbobjc.h"
 
 @implementation Speech
 

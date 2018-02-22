@@ -18,7 +18,7 @@ class MainViewController: UIViewController {
     @IBOutlet weak var _username: UITextField!
     @IBOutlet weak var _password: UITextField!
     @IBOutlet weak var _login_button: UIButton!
-    var ref: FIRDatabaseReference?
+    var ref: DatabaseReference?
     
     var isSignIn:Bool = true
     
@@ -33,7 +33,7 @@ class MainViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        ref = FIRDatabase.database().reference()
+        ref = Database.database().reference()
     }
     
     override func didReceiveMemoryWarning() {
@@ -58,7 +58,7 @@ class MainViewController: UIViewController {
         // TODO: form validation
         if let email = _username.text, let pass = _password.text {
             if isSignIn {
-                FIRAuth.auth()?.signIn(withEmail: email, password: pass, completion: {(user, error) in
+                Auth.auth().signIn(withEmail: email, password: pass, completion: {(user, error) in
                     if user != nil {
                         self.performSegue(withIdentifier: "goToData", sender: self)
                         self.errorLabel.text = ""
@@ -71,7 +71,7 @@ class MainViewController: UIViewController {
             }
             else {
                 if let prefnameText = _prefname.text?.trimmingCharacters(in: .whitespacesAndNewlines), _prefname.hasText {
-                    FIRAuth.auth()?.createUser(withEmail: email, password: pass, completion: {
+                    Auth.auth().createUser(withEmail: email, password: pass, completion: {
                         (user, error) in
                         if user != nil {
                             if error != nil {

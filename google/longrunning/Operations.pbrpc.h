@@ -1,21 +1,34 @@
+#if !GPB_GRPC_FORWARD_DECLARE_MESSAGE_PROTO
 #import <googleapis/Operations.pbobjc.h>
+#endif
 
 #import <ProtoRPC/ProtoService.h>
+#import <ProtoRPC/ProtoRPC.h>
 #import <RxLibrary/GRXWriteable.h>
 #import <RxLibrary/GRXWriter.h>
 
-#import <googleapis/Annotations.pbobjc.h>
-#if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
-  #import <Protobuf/Any.pbobjc.h>
+#if GPB_GRPC_FORWARD_DECLARE_MESSAGE_PROTO
+  @class CancelOperationRequest;
+  @class DeleteOperationRequest;
+  @class GPBEmpty;
+  @class GetOperationRequest;
+  @class ListOperationsRequest;
+  @class ListOperationsResponse;
+  @class Operation;
 #else
-  #import "google/protobuf/Any.pbobjc.h"
+  #import <googleapis/Annotations.pbobjc.h>
+  #if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
+    #import <Protobuf/Any.pbobjc.h>
+  #else
+    #import "google/protobuf/Any.pbobjc.h"
+  #endif
+  #if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
+    #import <Protobuf/Empty.pbobjc.h>
+  #else
+    #import "google/protobuf/Empty.pbobjc.h"
+  #endif
+  #import <googleapis/Status.pbobjc.h>
 #endif
-#if GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS
-  #import <Protobuf/Empty.pbobjc.h>
-#else
-  #import "google/protobuf/Empty.pbobjc.h"
-#endif
-#import <googleapis/Status.pbobjc.h>
 
 
 NS_ASSUME_NONNULL_BEGIN
