@@ -20,6 +20,8 @@ import googleapis
 import FirebaseAuth
 import FirebaseDatabase
 import MicrosoftBand
+import SystemConfiguration
+
 
 //let SAMPLE_RATE = 16000
 let SAMPLE_RATE = 44100.0
@@ -59,6 +61,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     var askUserFlag = true
     
+    var globalTile = MSBTile()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.canSpeak.delegate = self
@@ -94,7 +98,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             backgroundTask.startBackgroundTask()
             //        checkUserInput()
             MBandSetUp()
-            textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 60, target: self, selector: #selector(self.MBandSetUp), userInfo: nil, repeats: true)
+            textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 300, target: self, selector: #selector(self.MBandSetUp), userInfo: nil, repeats: true)
             
             _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
             self.sessionStarted = true
@@ -108,7 +112,12 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func MBSBaskUser() {
-        MBandSetUp()
+        if self.isConnectedToNetwork() {
+            MBandSetUp()
+        }
+        else {
+            print("The user is not connected to the internet")
+        }
     }
     
     func setupSessionForRecording() {
@@ -198,6 +207,10 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         self.sessionStarted = false
     }
     
+    func MSBSendMessage() {
+        
+    }
+    
     func MBandSetUp() {
         print ("button pressed")
         if let client = self.client {
@@ -213,6 +226,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             
             let tile = try? MSBTile(id: tileID! as UUID, name: tileName, tileIcon: titleIcon, smallIcon: smallIcon)
             tile?.isBadgingEnabled
+            
+            globalTile = tile!
             
             let textBlock = MSBPageTextBlock(rect: MSBPageRect(x: 0, y: 0, width: 200, height: 40), font: MSBPageTextBlockFont.small)
             textBlock?.elementId = 10
@@ -243,7 +258,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     
                     let pageID = UUID(uuidString: "1234BA9F-12FD-47A5-83A9-E7270A43BB99")
                     
-                    let pageValues = [try?MSBPageTextButtonData(elementId: 11, text: "Yes"), try?MSBPageTextBlockData(elementId: 10, text: "Are you busy?")]
+                    let pageValues = [try?MSBPageTextButtonData(elementId: 11, text: "No"), try?MSBPageTextBlockData(elementId: 10, text: "Question?")]
                     
                     let page = MSBPageData(id: pageID, layoutIndex: 0, value: pageValues)
                     
@@ -257,7 +272,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         }
                     })
                     
-                    client.notificationManager.sendMessage(withTileID: tile!.tileId!, title: "Activity Monitor", body: "Hi, Can I can you a question?", timeStamp: Date(), flags: .showDialog) { error in
+                    client.notificationManager.sendMessage(withTileID: tile!.tileId!, title: "Activity Monitor", body: "Hi, may I ask you a question?", timeStamp: Date(), flags: .showDialog) { error in
                         if (error != nil) {
                             print ("error in sending notification " + String(describing: error))
                         }
@@ -284,18 +299,71 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     } else {
                         // Fallback on earlier versions
                     }
-                    
                 }
                 else {
                     print (error!)
                 }
             })
-            
         }
         else {
             print("Band is not connected. Please wait....")
         }
         
+        print("button has been added")
+    }
+    
+    func MBandOnConnect() {
+        print ("button pressed")
+        if let client = self.client {
+            print("inside client")
+            if client.isDeviceConnected == false {
+                print("Band is not connected. Please wait....")
+                return
+            }
+            print("Button tile...")
+            let tileName = "D tile"
+            let titleIcon = try? MSBIcon(uiImage: UIImage(named:"D.png"))
+            let smallIcon = try? MSBIcon(uiImage: UIImage(named:"Dd.png"))
+            
+            let tile = try? MSBTile(id: tileID! as UUID, name: tileName, tileIcon: titleIcon, smallIcon: smallIcon)
+            tile?.isBadgingEnabled
+            
+            globalTile = tile!
+            
+            client.tileManager.add(tile!, completionHandler: { (error) in
+                
+                guard let msbError = error as? NSError! else {}
+                
+                if error == nil || MSBErrorType(rawValue: msbError.code) == (MSBErrorType.tileAlreadyExist){
+                    print("Creating page...")
+                    
+                    client.notificationManager.sendMessage(withTileID: tile!.tileId!, title: "Activity Monitor", body: "MicrosoftBand Ready", timeStamp: Date(), flags: .showDialog) { error in
+                        if (error != nil) {
+                            print ("error in sending notification " + String(describing: error))
+                        }
+                    }
+                    
+                    if #available(iOS 10.0, *) {
+                        _ = Timer.scheduledTimer(withTimeInterval: 1, repeats: false, block: { (timer) in
+                            client.tileManager.removePages(inTile: tile!.tileId!, completionHandler: { (error) in
+                                if (error != nil) {
+                                    print (String(describing: error))
+                                }
+                                print("timer has ended")
+                            })
+                        })
+                    } else {
+                        // Fallback on earlier versions
+                    }
+                }
+                else {
+                    print (error!)
+                }
+            })
+        }
+        else {
+            print("Band is not connected. Please wait....")
+        }
         
         print("button has been added")
     }
@@ -440,6 +508,25 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     print ("Post confirmed")
                     self.userInput = firstResponse
                     self.addPostFunc()
+                    self.client?.notificationManager.sendMessage(withTileID: self.globalTile.tileId!, title: "Activity Monitor", body: "Response recieved", timeStamp: Date(), flags: .showDialog) { error in
+                        if (error != nil) {
+                            print ("error in sending notification " + String(describing: error))
+                        }
+                    }
+                    
+                    if #available(iOS 10.0, *) {
+                        _ = Timer.scheduledTimer(withTimeInterval: 5, repeats: false, block: { (timer) in
+                            self.client?.tileManager.removePages(inTile: self.globalTile.tileId!, completionHandler: { (error) in
+                                if (error != nil) {
+                                    print (String(describing: error))
+                                }
+                                print("deleted notification for uploading response")
+                            })
+                        })
+                    } else {
+                        // Fallback on earlier versions
+                    }
+                    
                     self.backgroundTask.startBackgroundTask()
                 }
                 else if self.userInput == "no"{
@@ -476,6 +563,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     // MARK - Client Manager Delegates
     func clientManager(_ clientManager: MSBClientManager!, clientDidConnect client: MSBClient!) {
         print("Band connected.")
+        MBandOnConnect()
     }
     
     func clientManager(_ clientManager: MSBClientManager!, clientDidDisconnect client: MSBClient!) {
@@ -495,6 +583,9 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                 print (String(describing: error))
             }
         })
+        self.userInput = "No Response"
+        self.addPostFunc()
+        
         self.askUserFlag = false
     }
     
@@ -504,5 +595,36 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     func client(_ client: MSBClient!, tileDidClose event: MSBTileEvent!) {
         print("\(event.description)")
+    }
+    
+    func isConnectedToNetwork() -> Bool {
+        var zeroAddress = sockaddr_in(sin_len: 0, sin_family: 0, sin_port: 0, sin_addr: in_addr(s_addr: 0), sin_zero: (0, 0, 0, 0, 0, 0, 0, 0))
+        zeroAddress.sin_len = UInt8(MemoryLayout.size(ofValue: zeroAddress))
+        zeroAddress.sin_family = sa_family_t(AF_INET)
+        
+        let defaultRouteReachability = withUnsafePointer(to: &zeroAddress) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {zeroSockAddress in
+                SCNetworkReachabilityCreateWithAddress(nil, zeroSockAddress)
+            }
+        }
+        
+        var flags: SCNetworkReachabilityFlags = SCNetworkReachabilityFlags(rawValue: 0)
+        if SCNetworkReachabilityGetFlags(defaultRouteReachability!, &flags) == false {
+            return false
+        }
+        
+        /* Only Working for WIFI
+         let isReachable = flags == .reachable
+         let needsConnection = flags == .connectionRequired
+         
+         return isReachable && !needsConnection
+         */
+        
+        // Working for Cellular and WIFI
+        let isReachable = (flags.rawValue & UInt32(kSCNetworkFlagsReachable)) != 0
+        let needsConnection = (flags.rawValue & UInt32(kSCNetworkFlagsConnectionRequired)) != 0
+        let ret = (isReachable && !needsConnection)
+        
+        return ret
     }
 }
