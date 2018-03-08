@@ -24,6 +24,7 @@ class CanSpeak: NSObject, AVSpeechSynthesizerDelegate {
     override init(){
         super.init()
         voiceToUse = AVSpeechSynthesisVoice.speechVoices().filter({ $0.name == "Karen" }).first
+//        voiceToUse = AVSpeechSynthesisVoice.speechVoices().filter({ $0.name == "Monica" }).first
         self.voiceSynth.delegate = self
     }
     

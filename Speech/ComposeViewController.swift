@@ -22,7 +22,6 @@ import FirebaseDatabase
 import MicrosoftBand
 import SystemConfiguration
 
-
 //let SAMPLE_RATE = 16000
 let SAMPLE_RATE = 44100.0
 
@@ -36,24 +35,29 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     var userId: String?
     var ref: DatabaseReference?
     
+    let askInterval = 120
+
+    
     weak var client: MSBClient?
     
     let tileID = NSUUID(uuidString: "CDBDBA9F-12FD-47A5-8453-E7270A43BB99")
     
     var audioData: NSMutableData!
-    var textToSpeechTimerBackground = Timer()
+    var textToSpeechTimerBackground: Timer!
     var backgroundTask = BackgroundTask()
     var audioEngine = AVAudioEngine()
     var userInput = String()
     var sessionStarted = false
     var clockTimer = 0
     
+    var killThisSession = false
+    
     let synth = AVSpeechSynthesizer()
     let canSpeak = CanSpeak()
     let audioSession = AVAudioSession.sharedInstance()
     var firstResponse = ""
     
-    var needToCheckInput = true
+    var needToCheckInput = false
     
     var timerForRecording = Timer()
     
@@ -72,21 +76,39 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         textView.isEditable = false
         setupSessionForRecording()
         
+        startButton.alpha = 0.5
+        pauseButton.alpha = 0.5
+        
+        startButton.isUserInteractionEnabled = false
+        pauseButton.isUserInteractionEnabled = false
+        
         MSBClientManager.shared().delegate = self
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
         if let client = MSBClientManager.shared().attachedClients().first as? MSBClient {
             self.client = client
             // 2. Set Tile Event Delegate
             client.tileDelegate = self;
             
-            MSBClientManager.shared().connect(self.client)
-            print("Please wait. Connecting to Band...")
+            if client.isDeviceConnected {
+                startButton.alpha = 1
+                pauseButton.alpha = 1
+                
+                startButton.isUserInteractionEnabled = true
+                pauseButton.isUserInteractionEnabled = true
+            }
+            else {
+                MSBClientManager.shared().connect(self.client)
+                print("Please wait. Connecting to Band...")
+            }
         } else {
             print("Failed! No Bands attached.")
         }
     }
     
-    
     @IBAction func recordAudio(_ sender: NSObject) {
+        killThisSession = false
         if client?.isDeviceConnected == true {
             print("button pressed")
             SpeechRecognitionService.sharedInstance.sampleRate = Int(SAMPLE_RATE)
@@ -98,7 +120,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             backgroundTask.startBackgroundTask()
             //        checkUserInput()
             MBandSetUp()
-            textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: 300, target: self, selector: #selector(self.MBandSetUp), userInfo: nil, repeats: true)
+            textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: TimeInterval(askInterval), target: self, selector: #selector(self.MBandSetUp), userInfo: nil, repeats: true)
             
             _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
             self.sessionStarted = true
@@ -113,7 +135,9 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     func MBSBaskUser() {
         if self.isConnectedToNetwork() {
-            MBandSetUp()
+            if !killThisSession {
+                MBandSetUp()
+            }
         }
         else {
             print("The user is not connected to the internet")
@@ -123,6 +147,10 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     func setupSessionForRecording() {
         do {
             try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth])
+            
+            // testing the following code
+            try audioSession.setMode(AVAudioSessionModeDefault)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         } catch {
             fatalError("Error Setting Up Audio Session")
         }
@@ -154,13 +182,19 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
         backgroundTask.pauseBackgroundTask()
         
-        needToCheckInput = true
+//        needToCheckInput = true
         self.canSpeak.sayThis("Hello, What are you doing right now?", speed: 0.5)
     }
     
-    func askUserAgain() {
+    func askUserConfirmation() {
         backgroundTask.pauseBackgroundTask()
-        needToCheckInput = true
+//        needToCheckInput = true
+        self.canSpeak.sayThis("Could you please confirm with yes or no?", speed: 0.5)
+    }
+    
+    func AskUserAgain() {
+        backgroundTask.pauseBackgroundTask()
+        //        needToCheckInput = true
         self.canSpeak.sayThis("Could you please repeat what you said?", speed: 0.5)
     }
     
@@ -186,7 +220,9 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             audioEngine.stop()
             self.stopAudioTemp()
             backgroundTask.stopBackgroundTask()
+            killThisSession = true
             textToSpeechTimerBackground.invalidate()
+            textToSpeechTimerBackground = nil
         }
         
         self.sessionStarted = false
@@ -200,10 +236,16 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         pauseButton.alpha = 0.5
         pauseButton.isUserInteractionEnabled = false
         
-        _ = AudioController.sharedInstance.stop()
-        SpeechRecognitionService.sharedInstance.stopStreaming()
+
+        if SpeechRecognitionService.sharedInstance.isStreaming() {
+            SpeechRecognitionService.sharedInstance.stopStreaming()
+             _ = AudioController.sharedInstance.stop()
+        }
+        
+        killThisSession = true
         backgroundTask.stopBackgroundTask()
         textToSpeechTimerBackground.invalidate()
+        textToSpeechTimerBackground = nil
         self.sessionStarted = false
     }
     
@@ -217,7 +259,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             print("inside client")
             if client.isDeviceConnected == false {
                 print("Band is not connected. Please wait....")
-                return
+                MSBClientManager.shared().connect(self.client)
             }
             print("Button tile...")
             let tileName = "D tile"
@@ -264,7 +306,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     
                     client.tileManager.setPages([page], tileId: tile!.tileId, completionHandler: { (error) in
                         if error != nil {
-                            print("Error setting page: \(error)")
+                            print("Error setting page: \(error!)")
                         } else {
                             print("Successfully Finished!!!")
                             print("You can press the button on the D Tile to observe Tile Events,")
@@ -286,11 +328,11 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                                 }
                                 print("timer has ended")
                                 
-                                if self.askUserFlag == true {
+                                if self.askUserFlag == true && !self.killThisSession{
                                     self.askUser()
                                 }
                                 else {
-                                    print ("The user is busy")
+                                    print ("The user is busy or they paused the session")
                                 }
                                 
                                 self.askUserFlag = true
@@ -313,59 +355,63 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func MBandOnConnect() {
-        print ("button pressed")
-        if let client = self.client {
-            print("inside client")
-            if client.isDeviceConnected == false {
-                print("Band is not connected. Please wait....")
-                return
-            }
-            print("Button tile...")
-            let tileName = "D tile"
-            let titleIcon = try? MSBIcon(uiImage: UIImage(named:"D.png"))
-            let smallIcon = try? MSBIcon(uiImage: UIImage(named:"Dd.png"))
-            
-            let tile = try? MSBTile(id: tileID! as UUID, name: tileName, tileIcon: titleIcon, smallIcon: smallIcon)
-            tile?.isBadgingEnabled
-            
-            globalTile = tile!
-            
-            client.tileManager.add(tile!, completionHandler: { (error) in
-                
-                guard let msbError = error as? NSError! else {}
-                
-                if error == nil || MSBErrorType(rawValue: msbError.code) == (MSBErrorType.tileAlreadyExist){
-                    print("Creating page...")
-                    
-                    client.notificationManager.sendMessage(withTileID: tile!.tileId!, title: "Activity Monitor", body: "MicrosoftBand Ready", timeStamp: Date(), flags: .showDialog) { error in
-                        if (error != nil) {
-                            print ("error in sending notification " + String(describing: error))
-                        }
-                    }
-                    
-                    if #available(iOS 10.0, *) {
-                        _ = Timer.scheduledTimer(withTimeInterval: 1, repeats: false, block: { (timer) in
-                            client.tileManager.removePages(inTile: tile!.tileId!, completionHandler: { (error) in
-                                if (error != nil) {
-                                    print (String(describing: error))
-                                }
-                                print("timer has ended")
-                            })
-                        })
-                    } else {
-                        // Fallback on earlier versions
-                    }
-                }
-                else {
-                    print (error!)
-                }
-            })
-        }
-        else {
-            print("Band is not connected. Please wait....")
-        }
+//        print ("button pressed")
+//        if let client = self.client {
+//            print("inside client")
+//            if client.isDeviceConnected == false {
+//                print("Band is not connected. Please wait....")
+//                return
+//            }
+//            print("Button tile...")
+//            let tileName = "D tile"
+//            let titleIcon = try? MSBIcon(uiImage: UIImage(named:"D.png"))
+//            let smallIcon = try? MSBIcon(uiImage: UIImage(named:"Dd.png"))
+//
+//            let tile = try? MSBTile(id: tileID! as UUID, name: tileName, tileIcon: titleIcon, smallIcon: smallIcon)
+//            tile?.isBadgingEnabled
+//
+//            globalTile = tile!
+//
+//            client.tileManager.add(tile!, completionHandler: { (error) in
+//
+//                guard let msbError = error as? NSError! else {}
+//
+//                if error == nil || MSBErrorType(rawValue: msbError.code) == (MSBErrorType.tileAlreadyExist){
+//                    print("Creating page...")
+//
+//                    client.notificationManager.sendMessage(withTileID: tile!.tileId!, title: "Activity Monitor", body: "MicrosoftBand Ready", timeStamp: Date(), flags: .showDialog) { error in
+//                        if (error != nil) {
+//                            print ("error in sending notification " + String(describing: error))
+//                        }
+//                    }
+//
+//                    if #available(iOS 10.0, *) {
+//                        _ = Timer.scheduledTimer(withTimeInterval: 1, repeats: false, block: { (timer) in
+//                            client.tileManager.removePages(inTile: tile!.tileId!, completionHandler: { (error) in
+//                                if (error != nil) {
+//                                    print (String(describing: error))
+//                                }
+//                                print("timer has ended")
+//                            })
+//                        })
+//                    } else {
+//                        // Fallback on earlier versions
+//                    }
+//                }
+//                else {
+//                    print (error!)
+//                }
+//            })
+//        }
+//        else {
+//            print("Band is not connected. Please wait....")
+//        }
         
-        print("button has been added")
+        startButton.isUserInteractionEnabled = true
+        pauseButton.isUserInteractionEnabled = true
+        
+        startButton.alpha = 1
+        pauseButton.alpha = 1
     }
     
     func promptUser() {
@@ -406,8 +452,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                             self.addPostFunc()
                             print("after 20 seconds")
                         }
-                        
-//                        self.userInput = ""
                     } catch {
                         // handle errors
                     }
@@ -454,11 +498,13 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     if let error = error {
                         strongSelf.textView.text = error.localizedDescription
                         self?.userInput = error.localizedDescription
+                        self?.addPostFunc()
+                        self?.userInput = "error"
                         self?.doneWithRecording()
                         
                     } else if let response = response {
                         var finished = false
-                        //                        print(response)
+
                         for result in response.resultsArray! {
                             print ("processing data")
                             if let result = result as? StreamingRecognitionResult {
@@ -471,7 +517,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                                 }
                             }
                         }
-//                        strongSelf.textView.text = response.description
                         
                         if finished {
                             strongSelf.textView.text = self?.userInput
@@ -492,23 +537,21 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     func doneWithRecording() {
         self.timerForRecording.invalidate()
         self.stopAudioTemp()
+        
         do {
             print ("finished recording")
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             
-            semaphore.wait()
-            semaphore.signal()
+//            semaphore.wait()
+//            semaphore.signal()
             print ("need to check: " + String(needToCheckInput))
-            if needToCheckInput {
+//            if needToCheckInput {
                 print ("need to check: " + String(needToCheckInput) + " inside")
                 
                 // callback hell to ask the user again if they can't confirm what they said
-
-                if self.userInput == "yes" {
-                    print ("Post confirmed")
-                    self.userInput = firstResponse
-                    self.addPostFunc()
-                    self.client?.notificationManager.sendMessage(withTileID: self.globalTile.tileId!, title: "Activity Monitor", body: "Response recieved", timeStamp: Date(), flags: .showDialog) { error in
+                
+                if self.userInput == "error" {
+                    self.client?.notificationManager.sendMessage(withTileID: self.globalTile.tileId!, title: "Activity Monitor", body: "Session Ended", timeStamp: Date(), flags: .showDialog) { error in
                         if (error != nil) {
                             print ("error in sending notification " + String(describing: error))
                         }
@@ -523,22 +566,48 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                                 print("deleted notification for uploading response")
                             })
                         })
+                    }
+                    else {
+                        // Fallback on earlier versions
+                    }
+                }
+                else if (self.userInput == "yes" || self.userInput == "yeah" || self.userInput == "correct") && needToCheckInput {
+                    print ("Post confirmed")
+                    self.userInput = firstResponse
+                    self.addPostFunc()
+                    self.client?.notificationManager.sendMessage(withTileID: self.globalTile.tileId!, title: "Activity Monitor", body: "Response recieved", timeStamp: Date(), flags: .showDialog) { error in
+                        if (error != nil) {
+                            print ("error in sending notification " + String(describing: error))
+                        }
+                    }
+                    if #available(iOS 10.0, *) {
+                        _ = Timer.scheduledTimer(withTimeInterval: 5, repeats: false, block: { (timer) in
+                            self.client?.tileManager.removePages(inTile: self.globalTile.tileId!, completionHandler: { (error) in
+                                if (error != nil) {
+                                    print (String(describing: error))
+                                }
+                                print("deleted notification for uploading response")
+                            })
+                        })
                     } else {
                         // Fallback on earlier versions
                     }
-                    
+                    self.needToCheckInput = false
                     self.backgroundTask.startBackgroundTask()
                 }
-                else if self.userInput == "no"{
-                    self.askUserAgain()
+                else if (self.userInput == "no" || self.userInput == "nah") && needToCheckInput {
+                    needToCheckInput = false
+                    AskUserAgain()
                 }
-                else {
+                else if needToCheckInput == false{
+                    needToCheckInput = true
                     checkUserInput()
                 }
-                
+                else {
+                    askUserConfirmation()
+                }
                 print ("uploaded: " + self.userInput)
-            }
-            
+//            }
         } catch {
             // handle errors
             print ("error happened in doneWithRecoring")
@@ -577,20 +646,33 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     // MARK - Client Tile Delegate
     func client(_ client: MSBClient!, buttonDidPress event: MSBTileButtonEvent!) {
         print("\(event.description)")
-        print("button pressed")
+//        print("button pressed")
+//
+//        client.tileManager.removePages(inTile: tileID! as UUID, completionHandler: { (error) in
+//            if (error != nil) {
+//                print (String(describing: error))
+//            }
+//        })
+//
+//        self.userInput = "No Response"
+//        self.addPostFunc()
+//        self.askUserFlag = false
+    }
+    
+    @objc(client:tileDidOpen:) func client(_ client: MSBClient!, tileDidOpen  event: MSBTileEvent!) {
+        print("\(event.description)")
+        print("\(event.description)")
+        print("tile opened")
+        
         client.tileManager.removePages(inTile: tileID! as UUID, completionHandler: { (error) in
             if (error != nil) {
                 print (String(describing: error))
             }
         })
+        
         self.userInput = "No Response"
         self.addPostFunc()
-        
         self.askUserFlag = false
-    }
-    
-    @objc(client:tileDidOpen:) func client(_ client: MSBClient!, tileDidOpen  event: MSBTileEvent!) {
-        print("\(event.description)")
     }
     
     func client(_ client: MSBClient!, tileDidClose event: MSBTileEvent!) {
@@ -612,13 +694,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         if SCNetworkReachabilityGetFlags(defaultRouteReachability!, &flags) == false {
             return false
         }
-        
-        /* Only Working for WIFI
-         let isReachable = flags == .reachable
-         let needsConnection = flags == .connectionRequired
-         
-         return isReachable && !needsConnection
-         */
         
         // Working for Cellular and WIFI
         let isReachable = (flags.rawValue & UInt32(kSCNetworkFlagsReachable)) != 0

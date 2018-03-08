@@ -56,8 +56,7 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
             self.tableView.reloadData()
         })
         
-        ref?.child("users").child(userId!).child("Posts").queryLimited(toLast: 1)
-            .observe(.childAdded, with: { snapshot in
+        ref?.child("users").child(userId!).child("Posts").queryLimited(toLast: 1).observe(.childAdded, with: { snapshot in
                 guard let temp = snapshot.value as? [String: Any] else { return }
                 
                 let message = temp["message"] as? String
@@ -68,9 +67,8 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
                 
                 print(snapshot.value!)
                 self.tableView.reloadData()
-            })
+        })
     }
-    
     
     @IBAction func logout(_ sender: UIBarButtonItem) {
         try! Auth.auth().signOut()
@@ -79,7 +77,6 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == UITableViewCellEditingStyle.delete {
-            
             guard let uid = Auth.auth().currentUser?.uid else {
                 return
             }
@@ -99,7 +96,6 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
             
             tableView.reloadData()
         }
-        
     }
     
     override func didReceiveMemoryWarning() {
@@ -117,4 +113,3 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
         return postData.count
     }
 }
-
