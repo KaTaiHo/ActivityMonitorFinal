@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2C450CC6320CA9890051ABAF /* Pods_Speech.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0B7F558BD8BC89862C8C277 /* Pods_Speech.framework */; };
+		4B8B29EA2052335600BF2F74 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8B29E92052335600BF2F74 /* SettingsViewController.swift */; };
 		4B9A561520376C3A0071D8A2 /* MicrosoftBandKit_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B9A561420376C390071D8A2 /* MicrosoftBandKit_iOS.framework */; };
 		4BF0D7DB1FE63DC60006BA2C /* canSpeak.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7DA1FE63DC60006BA2C /* canSpeak.swift */; };
 		4BF0D7DD1FE63DCE0006BA2C /* backgroundTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7DC1FE63DCE0006BA2C /* backgroundTask.swift */; };
@@ -31,6 +32,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4B8B29E92052335600BF2F74 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		4B9A561420376C390071D8A2 /* MicrosoftBandKit_iOS.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MicrosoftBandKit_iOS.framework; sourceTree = "<group>"; };
 		4BF0D7DA1FE63DC60006BA2C /* canSpeak.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = canSpeak.swift; sourceTree = "<group>"; };
 		4BF0D7DC1FE63DCE0006BA2C /* backgroundTask.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = backgroundTask.swift; sourceTree = "<group>"; };
@@ -130,6 +132,7 @@
 				4BF0D7E01FE63FBD0006BA2C /* MainViewController.swift */,
 				4BF0D7EA1FE6514B0006BA2C /* DataViewController.swift */,
 				4BF0D7EC1FE653B20006BA2C /* ComposeViewController.swift */,
+				4B8B29E92052335600BF2F74 /* SettingsViewController.swift */,
 			);
 			path = Speech;
 			sourceTree = "<group>";
@@ -308,6 +311,7 @@
 			files = (
 				4BF0D7E11FE63FBD0006BA2C /* MainViewController.swift in Sources */,
 				4BF0D7EB1FE6514B0006BA2C /* DataViewController.swift in Sources */,
+				4B8B29EA2052335600BF2F74 /* SettingsViewController.swift in Sources */,
 				4BF0D7E31FE641770006BA2C /* UIColor+hex.swift in Sources */,
 				D31E0EBA1D77AA2F006A50AB /* AudioController.swift in Sources */,
 				D31E0EB81D778A56006A50AB /* SpeechRecognitionService.swift in Sources */,

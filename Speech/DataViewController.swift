@@ -75,28 +75,29 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
         presentingViewController?.dismiss(animated: true, completion: nil)
     }
     
-    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == UITableViewCellEditingStyle.delete {
-            guard let uid = Auth.auth().currentUser?.uid else {
-                return
-            }
-            
-            let post = self.referenceArr[indexPath.row]
-            print(post)
-            
-            Database.database().reference().child("users").child(uid).child("Posts").child(post).removeValue(completionBlock: { (error, ref) in
-                if error != nil {
-                    print("Failed to Delete Message", error!)
-                    return
-                }
-            })
-            
-            self.postData.remove(at: indexPath.row)
-            self.referenceArr.remove(at: indexPath.row)
-            
-            tableView.reloadData()
-        }
-    }
+// allow user to delete entry
+//    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+//        if editingStyle == UITableViewCellEditingStyle.delete {
+//            guard let uid = Auth.auth().currentUser?.uid else {
+//                return
+//            }
+//
+//            let post = self.referenceArr[indexPath.row]
+//            print(post)
+//
+//            Database.database().reference().child("users").child(uid).child("Posts").child(post).removeValue(completionBlock: { (error, ref) in
+//                if error != nil {
+//                    print("Failed to Delete Message", error!)
+//                    return
+//                }
+//            })
+//
+//            self.postData.remove(at: indexPath.row)
+//            self.referenceArr.remove(at: indexPath.row)
+//
+//            tableView.reloadData()
+//        }
+//    }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
