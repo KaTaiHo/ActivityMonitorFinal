@@ -18,12 +18,12 @@ class CanSpeak: NSObject, AVSpeechSynthesizerDelegate {
     let voices = AVSpeechSynthesisVoice.speechVoices()
     let voiceSynth = AVSpeechSynthesizer()
     var voiceToUse: AVSpeechSynthesisVoice?
+    let audioSession = AVAudioSession.sharedInstance()
     
     var delegate: CanSpeakDelegate!
     
     override init(){
         super.init()
-        
         if let v = UserDefaults.standard.object(forKey: "voice") as? String {
             voiceToUse = AVSpeechSynthesisVoice.speechVoices().filter({ $0.name == v }).first
         }
@@ -44,7 +44,6 @@ class CanSpeak: NSObject, AVSpeechSynthesizerDelegate {
     }
     
     func sayThis(_ phrase: String, speed: Float){
-        
         if let v = UserDefaults.standard.object(forKey: "voice") as? String {
             voiceToUse = AVSpeechSynthesisVoice.speechVoices().filter({ $0.name == v }).first
         }

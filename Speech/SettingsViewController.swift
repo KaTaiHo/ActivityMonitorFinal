@@ -9,12 +9,23 @@
 import UIKit
 import AVFoundation
 
-class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDelegate, CanSpeakDelegate {
+class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDelegate, CanSpeakDelegate, UITextFieldDelegate {
 
+    @IBOutlet weak var saveButton: UIButton!
     @IBOutlet weak var textBox: UITextField!
     @IBOutlet weak var userTimeInterval: UITextField!
     
     @IBAction func goBack(_ sender: Any) {
+        
+        let audioSession = AVAudioSession.sharedInstance()  //2
+        do
+        {
+            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+        }
+        catch
+        {
+            print("audioSession properties weren't set because of an error.")
+        }
         presentingViewController?.dismiss(animated: true, completion: nil)
     }
     
@@ -22,33 +33,31 @@ class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPicker
     var pickerView = UIPickerView()
     var userPickedVoice = String("")
     
-    var voices = ["Karen", "Daniel", "Moira", "Samantha", "Tessa", "Monica"]
+    var voices = ["Karen", "Daniel", "Moira", "Samantha", "Tessa"]
     
     @IBAction func saveButton(_ sender: Any) {
-        if userPickedVoice != "" && userTimeInterval.text != "" {
+        if userPickedVoice != "" {
             UserDefaults.standard.set(userPickedVoice, forKey: "voice")
-            UserDefaults.standard.set(Int(userTimeInterval.text!)! * 60, forKey: "userTimeInterval")
-            print("saved the users selected voice")
-            print("The user selected " + String(Int(userTimeInterval.text!)! * 60))
-            
-            textBox.text = ""
-            userTimeInterval.text = ""
-            presentingViewController?.dismiss(animated: true, completion: nil)
         }
         
+        if userTimeInterval.text != "" {
+            UserDefaults.standard.set(Int(userTimeInterval.text!)! * 60, forKey: "userTimeInterval")
+        }
+        
+        textBox.text = ""
+        userTimeInterval.text = ""
+        presentingViewController?.dismiss(animated: true, completion: nil)
     }
     
     func testVoice (v: String) {
-
-        
         let audioSession = AVAudioSession.sharedInstance()  //2
         do
         {
-            try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
             //try audioSession.setMode(AVAudioSessionModeMeasurement)
             try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
-            try AVAudioSession.sharedInstance().overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
+//            try AVAudioSession.sharedInstance().overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
         }
         catch
         {
@@ -63,9 +72,16 @@ class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPicker
         pickerView.delegate = self
         pickerView.dataSource = self
         
+        textBox.delegate = self
+        userTimeInterval.delegate = self
+        
         textBox.inputView = pickerView
         textBox.textAlignment = .center
         textBox.placeholder = "Select Voice"
+        
+        saveButton.layer.cornerRadius = 10;
+        saveButton.clipsToBounds = true;
+        
         // Do any additional setup after loading the view.
     }
 
@@ -90,5 +106,16 @@ class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPicker
     
     func speechDidFinish() {
 
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.textBox.endEditing(true)
+        self.userTimeInterval.endEditing(true)
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textBox.resignFirstResponder()
+        userTimeInterval.endEditing(true)
+        return (true)
     }
 }

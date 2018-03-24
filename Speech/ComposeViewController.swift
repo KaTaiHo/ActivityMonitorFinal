@@ -32,6 +32,9 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     @IBOutlet weak var startButton: UIButton!
     @IBOutlet weak var pauseButton: UIButton!
     @IBOutlet weak var debugLabel: UILabel!
+    @IBOutlet weak var currentSettingsLabel: UILabel!
+    let questions = ["Hello, What are you doing right now?", "Hello, Who are you with right now?", "Hello, How would you describe your mood right now?", "Hello, What was the last thing you ate?", "Hello, Are you happy right now?", "Hello, Are you tired right now?",
+        "Hello, How stressed are you right now?"]
     
     var userId: String?
     var ref: DatabaseReference?
@@ -40,7 +43,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     weak var client: MSBClient?
     let tileID = NSUUID(uuidString: "CDBDBA9F-12FD-47A5-8453-E7270A43BB99")
     
-    var debug = true
+    var debug = false
     
     var audioData: NSMutableData!
     var textToSpeechTimerBackground = Timer()
@@ -58,6 +61,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     var askUserFlag = true
     var globalTile = MSBTile()
     
+    var currentQuestion = String()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.canSpeak.delegate = self
@@ -65,21 +70,27 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         ref = Database.database().reference()
         userId = Auth.auth().currentUser?.uid
         textView.isEditable = false
-        setupSessionForRecording()
+//        setupSessionForRecording()
         
         startButton.alpha = 0.5
         pauseButton.alpha = 0.5
+        
+        startButton.layer.cornerRadius = 10;
+        startButton.clipsToBounds = true;
+        
+        pauseButton.layer.cornerRadius = 10;
+        pauseButton.clipsToBounds = true;
         
         startButton.isUserInteractionEnabled = false
         pauseButton.isUserInteractionEnabled = false
         
         MSBClientManager.shared().delegate = self
-        liveLabel.isHidden = true
+//        liveLabel.isHidden = true
+        liveLabel.text = "Offline"
         
         if !debug {
             debugLabel.isHidden = true
         }
-        
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -88,12 +99,9 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             // 2. Set Tile Event Delegate
             client.tileDelegate = self;
             
-            if client.isDeviceConnected {
+            if client.isDeviceConnected && !self.sessionStarted{
                 startButton.alpha = 1
-                pauseButton.alpha = 1
-                
                 startButton.isUserInteractionEnabled = true
-                pauseButton.isUserInteractionEnabled = true
             }
             else {
                 MSBClientManager.shared().connect(self.client)
@@ -102,6 +110,25 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         } else {
             print("Failed! No Bands attached.")
         }
+        
+        var currentSettingsString = String()
+
+        if let currentVoice = UserDefaults.standard.string(forKey: "voice") {
+            currentSettingsString = currentVoice
+        }
+        else {
+            currentSettingsString = "Karen"
+        }
+        
+        if let value = UserDefaults.standard.object(forKey: "userTimeInterval") as? Int {
+            currentSettingsString = currentSettingsString + " interval " + String(value/60) + " minutes"
+            askInterval = value
+        }
+        else {
+            currentSettingsString = currentSettingsString + " interval: " + String(askInterval/60) + " minutes"
+        }
+        
+        currentSettingsLabel.text = currentSettingsString
     }
     
     @IBAction func recordAudio(_ sender: NSObject) {
@@ -128,6 +155,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             
             _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
             self.sessionStarted = true
+            liveLabel.text = "Online"
             liveLabel.isHidden = false
             liveLabel.textColor = UIColor.red
         }
@@ -159,6 +187,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             
             // testing the following code
             try audioSession.setMode(AVAudioSessionModeDefault)
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         } catch {
             fatalError("Error Setting Up Audio Session")
@@ -187,26 +216,28 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         }
     }
     
+    
+    
     func askUser() {
         backgroundTask.pauseBackgroundTask()
+        let askString = questions[Int(arc4random_uniform(UInt32(questions.count)))]
+        self.currentQuestion = askString
         
         do {
-            try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
-        } catch {
-            fatalError("Error Setting Up Audio Session")
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+            try audioSession.setMode(AVAudioSessionModeDefault)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+        }
+        catch {
+            
         }
         
-        self.canSpeak.sayThis("Hello, What are you doing right now?", speed: 0.5)
+        self.canSpeak.sayThis(askString, speed: 0.5)
     }
     
     func askUserConfirmation() {
         backgroundTask.pauseBackgroundTask()
-        
-        do {
-            try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
-        } catch {
-            fatalError("Error Setting Up Audio Session")
-        }
         
         self.canSpeak.sayThis("Could you please confirm with yes or no?", speed: 0.5)
     }
@@ -214,24 +245,12 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     func AskUserAgain() {
         backgroundTask.pauseBackgroundTask()
         
-        do {
-            try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
-        } catch {
-            fatalError("Error Setting Up Audio Session")
-        }
-        
         self.canSpeak.sayThis("Could you please repeat what you said?", speed: 0.5)
     }
     
     func checkUserInput(){
         backgroundTask.pauseBackgroundTask()
         firstResponse = self.userInput
-        
-        do {
-            try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
-        } catch {
-            fatalError("Error Setting Up Audio Session")
-        }
         
         self.canSpeak.sayThis("Did you say" + self.userInput, speed: 0.5)
         print("user said " + self.userInput)
@@ -274,9 +293,11 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         backgroundTask.stopBackgroundTask()
         
         textToSpeechTimerBackground.invalidate()
+        timerForRecording?.invalidate()
         
         liveLabel.isHidden = false
         liveLabel.textColor = UIColor.gray
+        liveLabel.text = "Offline"
         self.sessionStarted = false
     }
     
@@ -287,6 +308,9 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             if client.isDeviceConnected == false {
                 print("Band is not connected. Please wait....")
                 MSBClientManager.shared().connect(self.client)
+                startButton.alpha = 1
+                startButton.isUserInteractionEnabled = true
+                
             }
             print("Button tile...")
             let tileName = "D tile"
@@ -348,7 +372,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     }
                     
                     if #available(iOS 10.0, *) {
-                        _ = Timer.scheduledTimer(withTimeInterval: 5, repeats: false, block: { (timer) in
+                        _ = Timer.scheduledTimer(withTimeInterval: 10, repeats: false, block: { (timer) in
                             client.tileManager.removePages(inTile: tile!.tileId!, completionHandler: { (error) in
                                 if (error != nil) {
                                     print (String(describing: error))
@@ -385,9 +409,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     func MBandOnConnect() {
         if !sessionStarted {
             startButton.isUserInteractionEnabled = true
-            pauseButton.isUserInteractionEnabled = true
             startButton.alpha = 1
-            pauseButton.alpha = 1
         }
     }
     
@@ -396,23 +418,27 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         
         do {
 //            try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth])
+           
             try audioSession.setCategory(AVAudioSessionCategoryRecord, with: [.allowBluetooth])
+            
         } catch {
             fatalError("Error Setting Up Audio Session")
         }
         
         print ("You can say something now!")
-        client?.notificationManager.vibrate(with: MSBNotificationVibrationType.twoToneHigh) { error in
-            if (error != nil) {
-                print(error)
-            }
-        }
+
         
         self.textView.text = "You can say something now"
         audioData = NSMutableData()
         
         _ = AudioController.sharedInstance.prepare(specifiedSampleRate: Int(SAMPLE_RATE))
         _ = AudioController.sharedInstance.start()
+        
+        client?.notificationManager.vibrate(with: MSBNotificationVibrationType.twoToneHigh) { error in
+            if (error != nil) {
+                print(error)
+            }
+        }
         
         if #available(iOS 10.0, *) {
             self.timerForRecording = Timer.scheduledTimer(withTimeInterval: 20, repeats: false, block: { (timer) in
@@ -421,7 +447,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                 do {
                     if self.userInput == "" {
                         print("no response from the user")
-                        self.userInput = "No Response From User"
+                        self.userInput = "The device did not pick up any sound or the environment is too noisy"
                         self.textView.text = self.userInput
                         try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
                         self.backgroundTask.startBackgroundTask()
@@ -547,8 +573,10 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                 }
                 else if (self.userInput == "yes" || self.userInput == "yeah" || self.userInput == "correct") && needToCheckInput {
                     print ("Post confirmed")
-                    self.userInput = firstResponse
+                    self.userInput = currentQuestion + ": " + firstResponse
                     self.addPostFunc()
+                    
+                    self.textView.text = "Upload success!"
 
                     client?.notificationManager.vibrate(with: MSBNotificationVibrationType.twoToneHigh) { error in
                         if (error != nil) {
@@ -570,8 +598,9 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     }
                     
                     self.needToCheckInput = false
-                    self.backgroundTask.startBackgroundTask()
+                    
                     try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+                    self.backgroundTask.startBackgroundTask()
                 }
                 else if (self.userInput == "no" || self.userInput == "nah") && needToCheckInput {
                     needToCheckInput = false
