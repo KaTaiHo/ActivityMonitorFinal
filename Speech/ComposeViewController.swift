@@ -63,6 +63,11 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     var currentQuestion = String()
     
+    var sessionSemaphore = DispatchSemaphore(value: 1)
+    var recordingSemaphore = DispatchSemaphore(value: 0)
+    
+    var bluetoothConnectSemaphore = DispatchSemaphore(value: 0)
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.canSpeak.delegate = self
@@ -132,18 +137,16 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     @IBAction func recordAudio(_ sender: NSObject) {
+        sessionSemaphore.wait()
+        
         killThisSession = false
         if client?.isDeviceConnected == true {
             print("button pressed")
             SpeechRecognitionService.sharedInstance.sampleRate = Int(SAMPLE_RATE)
-            startButton.alpha = 0.5
-            startButton.isUserInteractionEnabled = false
-            pauseButton.alpha = 1
-            pauseButton.isUserInteractionEnabled = true
             
             backgroundTask.startBackgroundTask()
             //        checkUserInput()
-            MBandSetUp()
+            MBSaskUser()
             
             // get UserDefault
             if let value = UserDefaults.standard.object(forKey: "userTimeInterval") as? Int {
@@ -151,7 +154,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                 askInterval = value
             }
             
-            textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: TimeInterval(askInterval), target: self, selector: #selector(self.MBandSetUp), userInfo: nil, repeats: true)
+            textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: TimeInterval(askInterval), target: self, selector: #selector(self.MBSaskUser), userInfo: nil, repeats: true)
             
             _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
             self.sessionStarted = true
@@ -160,6 +163,12 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             liveLabel.textColor = UIColor.red
         }
         // tell the user to wait for the band to connect TODO
+        
+        sessionSemaphore.signal()
+        startButton.alpha = 0.5
+        startButton.isUserInteractionEnabled = false
+        pauseButton.alpha = 1
+        pauseButton.isUserInteractionEnabled = true
     }
     
     func clockTick() {
@@ -170,7 +179,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         debugLabel.text = timestring
     }
     
-    func MBSBaskUser() {
+    func MBSaskUser() {
         if self.isConnectedToNetwork() {
             if !killThisSession {
                 MBandSetUp()
@@ -265,6 +274,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         if self.sessionStarted {
             audioEngine.stop()
             self.stopAudioTemp()
+            recordingSemaphore.wait()
             backgroundTask.stopBackgroundTask()
             killThisSession = true
             
@@ -277,12 +287,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     @IBAction func stopAudio(_ sender: NSObject) {
+        sessionSemaphore.wait()
         print("stopping the audio")
-        startButton.alpha = 1
-        startButton.isUserInteractionEnabled = true
-        pauseButton.alpha = 0.5
-        pauseButton.isUserInteractionEnabled = false
-        
 
         if SpeechRecognitionService.sharedInstance.isStreaming() {
             SpeechRecognitionService.sharedInstance.stopStreaming()
@@ -299,19 +305,28 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         liveLabel.textColor = UIColor.gray
         liveLabel.text = "Offline"
         self.sessionStarted = false
+        
+        sessionSemaphore.signal()
+        startButton.alpha = 1
+        startButton.isUserInteractionEnabled = true
+        pauseButton.alpha = 0.5
+        pauseButton.isUserInteractionEnabled = false
     }
     
     func MBandSetUp() {
-        
         if let client = self.client {
             print("inside client")
             if client.isDeviceConnected == false {
                 print("Band is not connected. Please wait....")
                 MSBClientManager.shared().connect(self.client)
-                startButton.alpha = 1
-                startButton.isUserInteractionEnabled = true
-                
+                bluetoothConnectSemaphore.wait()
+//                startButton.alpha = 1
+//                startButton.isUserInteractionEnabled = true
             }
+            
+            
+            
+            
             print("Button tile...")
             let tileName = "D tile"
             let titleIcon = try? MSBIcon(uiImage: UIImage(named:"D.png")) 
@@ -407,6 +422,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func MBandOnConnect() {
+        bluetoothConnectSemaphore.signal()
         if !sessionStarted {
             startButton.isUserInteractionEnabled = true
             startButton.alpha = 1
@@ -426,13 +442,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         }
         
         print ("You can say something now!")
-
-        
-        self.textView.text = "You can say something now"
-        audioData = NSMutableData()
-        
-        _ = AudioController.sharedInstance.prepare(specifiedSampleRate: Int(SAMPLE_RATE))
-        _ = AudioController.sharedInstance.start()
         
         client?.notificationManager.vibrate(with: MSBNotificationVibrationType.twoToneHigh) { error in
             if (error != nil) {
@@ -440,9 +449,17 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             }
         }
         
+        self.textView.text = "You can say something now"
+        audioData = NSMutableData()
+        
+        _ = AudioController.sharedInstance.prepare(specifiedSampleRate: Int(SAMPLE_RATE))
+        _ = AudioController.sharedInstance.start()
+        
+        
         if #available(iOS 10.0, *) {
-            self.timerForRecording = Timer.scheduledTimer(withTimeInterval: 20, repeats: false, block: { (timer) in
+            self.timerForRecording = Timer.scheduledTimer(withTimeInterval: 25, repeats: false, block: { (timer) in
                 self.stopAudioTemp()
+                self.recordingSemaphore.wait()
                 print("timer Stopped")
                 do {
                     if self.userInput == "" {
@@ -478,12 +495,14 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     func stopAudioTemp() {
         _ = AudioController.sharedInstance.stop()
         SpeechRecognitionService.sharedInstance.stopStreaming()
+        recordingSemaphore.signal()
     }
     
     func processSampleData(_ data: Data) -> Void {
         if killThisSession {
             return
         }
+        
         audioData.append(data)
         // We recommend sending samples in 100ms chunks
         let chunkSize : Int /* bytes/chunk */ = Int(0.1 /* seconds/chunk */
@@ -506,6 +525,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         return
                     } else if let response = response {
                         var finished = false
+                        
                         for result in response.resultsArray! {
                             print ("processing data")
                             if let result = result as? StreamingRecognitionResult {
@@ -536,7 +556,10 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     func doneWithRecording() {
         self.timerForRecording?.invalidate()
         self.timerForRecording = nil
+        
         self.stopAudioTemp()
+        
+        self.recordingSemaphore.wait()
         
         do {
             print ("finished recording")
@@ -621,8 +644,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             // handle errors
             print ("error happened in doneWithRecoring")
         }
-        
-        
     }
     
     func addPostFunc () {
