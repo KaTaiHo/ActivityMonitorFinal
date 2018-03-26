@@ -22,8 +22,8 @@ import FirebaseDatabase
 import MicrosoftBand
 import SystemConfiguration
 
-//let SAMPLE_RATE = 16000
-let SAMPLE_RATE = 44100.0
+let SAMPLE_RATE = 16000
+//let SAMPLE_RATE = 44100.0
 
 class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpeakDelegate, ConnectionDelegate, MSBClientManagerDelegate, MSBClientTileDelegate {
     
@@ -75,7 +75,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         ref = Database.database().reference()
         userId = Auth.auth().currentUser?.uid
         textView.isEditable = false
-//        setupSessionForRecording()
+        setupSessionForRecording()
         
         startButton.alpha = 0.5
         pauseButton.alpha = 0.5
@@ -195,9 +195,9 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
 //            try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth])
             
             // testing the following code
-            try audioSession.setMode(AVAudioSessionModeDefault)
-            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
-            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//            try audioSession.setMode(AVAudioSessionModeDefault)
+//            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         } catch {
             fatalError("Error Setting Up Audio Session")
         }
