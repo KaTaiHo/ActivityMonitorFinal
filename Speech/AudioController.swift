@@ -38,7 +38,7 @@ class AudioController {
     let session = AVAudioSession.sharedInstance()
     do {
         try session.setCategory(AVAudioSessionCategoryRecord, with: .allowBluetooth)
-        try session.setActive(true, with: .notifyOthersOnDeactivation)
+//        try session.setActive(true, with: .notifyOthersOnDeactivation)
 //        try session.setPreferredIOBufferDuration(10)
     }
     catch {
@@ -124,12 +124,12 @@ class AudioController {
 
   func stop() -> OSStatus {
     let session = AVAudioSession.sharedInstance()
-    do {
-        try session.setActive(false, with: .notifyOthersOnDeactivation)
-    }
-    catch {
-        return -1
-    }
+//    do {
+//        try session.setActive(false, with: .notifyOthersOnDeactivation)
+//    }
+//    catch {
+//        return -1
+//    }
     return AudioOutputUnitStop(remoteIOUnit!)
   }
 }

@@ -281,7 +281,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
-            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         }
         catch {
             
@@ -297,7 +297,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
-            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         }
         catch {
             
@@ -313,7 +313,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
-            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         }
         catch {
             
@@ -330,7 +330,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
-            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         }
         catch {
             
@@ -533,8 +533,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         self.userInput = "The device did not pick up any sound or the environment is too noisy"
                         self.textView.text = self.userInput
                         try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
-                        try self.audioSession.setActive(true, with: .notifyOthersOnDeactivation)
-                        try self.audioSession.setPreferredInput(self.mic!)
+//                        try self.audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//                        try self.audioSession.setPreferredInput(self.mic!)
                         self.backgroundTask.startBackgroundTask()
                         self.addPostFunc()
                         print("after 20 seconds")
@@ -622,7 +622,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         
         do {
             // stop session when u finish asking the user
-            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+//            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
         }
         catch {
             
@@ -670,7 +670,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         // Fallback on earlier versions
                     }
                     self.needToCheckInput = false
-                    try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+//                    try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
                 }
                 else if (self.userInput == "yes" || self.userInput == "yeah" || self.userInput == "correct") && needToCheckInput {
                     print ("Post confirmed")
@@ -700,7 +700,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     
                     self.needToCheckInput = false
                     
-                    try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+//                    try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
                     self.backgroundTask.startBackgroundTask()
                 }
                 else if (self.userInput == "no" || self.userInput == "nah") && needToCheckInput {

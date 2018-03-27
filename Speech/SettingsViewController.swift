@@ -56,7 +56,7 @@ class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPicker
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
             //try audioSession.setMode(AVAudioSessionModeMeasurement)
-            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
 //            try AVAudioSession.sharedInstance().overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
         }
         catch
@@ -107,7 +107,7 @@ class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPicker
     func speechDidFinish() {
         let audioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+//            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
         }
         catch
         {
