@@ -273,7 +273,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func askUser() {
-        backgroundTask.pauseBackgroundTask()
+//        backgroundTask.pauseBackgroundTask()
         let askString = questions[Int(arc4random_uniform(UInt32(questions.count)))]
         self.currentQuestion = askString
         
@@ -291,7 +291,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func askUserConfirmation() {
-        backgroundTask.pauseBackgroundTask()
+//        backgroundTask.pauseBackgroundTask()
         
         do {
             let audioSession = AVAudioSession.sharedInstance()
@@ -307,7 +307,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func AskUserAgain() {
-        backgroundTask.pauseBackgroundTask()
+//        backgroundTask.pauseBackgroundTask()
         
         do {
             let audioSession = AVAudioSession.sharedInstance()
@@ -323,7 +323,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func checkUserInput(){
-        backgroundTask.pauseBackgroundTask()
+//        backgroundTask.pauseBackgroundTask()
         firstResponse = self.userInput
         
         do {
@@ -509,18 +509,17 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         
         print ("You can say something now!")
         
-        client?.notificationManager.vibrate(with: MSBNotificationVibrationType.twoToneHigh) { error in
-            if (error != nil) {
-                print(error)
-            }
-        }
-        
         self.textView.text = "You can say something now"
         audioData = NSMutableData()
         
         _ = AudioController.sharedInstance.prepare(specifiedSampleRate: Int(SAMPLE_RATE))
         _ = AudioController.sharedInstance.start()
         
+        client?.notificationManager.vibrate(with: MSBNotificationVibrationType.twoToneHigh) { error in
+            if (error != nil) {
+                print(error)
+            }
+        }
         
         if #available(iOS 10.0, *) {
             self.timerForRecording = Timer.scheduledTimer(withTimeInterval: 40, repeats: false, block: { (timer) in
@@ -535,7 +534,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
 //                        try self.audioSession.setActive(true, with: .notifyOthersOnDeactivation)
 //                        try self.audioSession.setPreferredInput(self.mic!)
-                        self.backgroundTask.startBackgroundTask()
+//                        self.backgroundTask.startBackgroundTask()
                         self.addPostFunc()
                         print("after 20 seconds")
                     }
@@ -701,7 +700,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     self.needToCheckInput = false
                     
 //                    try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
-                    self.backgroundTask.startBackgroundTask()
+//                    self.backgroundTask.startBackgroundTask()
                 }
                 else if (self.userInput == "no" || self.userInput == "nah") && needToCheckInput {
                     needToCheckInput = false
