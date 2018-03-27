@@ -105,7 +105,14 @@ class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPicker
     }
     
     func speechDidFinish() {
-
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+        }
+        catch
+        {
+            print("audioSession properties weren't set because of an error.")
+        }
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {

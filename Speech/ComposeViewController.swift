@@ -242,7 +242,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
 //            try audioSession.setMode(AVAudioSessionModeDefault)
 //            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
 //            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
-            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         } catch {
             fatalError("Error Setting Up Audio Session")
         }
@@ -265,7 +265,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         }
         do {
             try audioSession.setPreferredInput(input)
-            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         }
         catch {
             fatalError("Error Setting Up Audio Session")
@@ -507,47 +507,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     func promptUser() {
         self.userInput = ""
         
-        do {
-//            try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth])
-            
-            
-//            print (audioSession.availableInputs)
-            
-//            guard let availableInputs = audioSession.availableInputs else {
-//                return
-//            }
-//
-//
-//            for input in availableInputs {
-//                print ("input port " + String(describing: input))
-//                if input.portType == AVAudioSessionPortBluetoothHFP || input.portType == AVAudioSessionPortBluetoothA2DP{
-//                    mic = input
-//                }
-//            }
-//
-//
-//
-//            if #available(iOS 10.0, *) {
-//                try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth, .allowBluetoothA2DP])
-//            } else {
-//                // Fallback on earlier versions
-//            }
-            
-//            print (audioSession.sampleRate)
-//            try audioSession.setMode(AVAudioSessionModeVideoChat)
-//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
-//            try audioSession.setPreferredInput(mic!)
-            
-
-//            print (audioSession.availableInputs)
-//            print ("mic is: " + String(describing: audioSession.preferredInput))
-//            print ("current route: " + String(describing: audioSession.currentRoute))
-
-            
-        } catch {
-            fatalError("Error Setting Up Audio Session")
-        }
-        
         print ("You can say something now!")
         
         client?.notificationManager.vibrate(with: MSBNotificationVibrationType.twoToneHigh) { error in
@@ -683,7 +642,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         do {
             print ("finished recording")
             // stop session from recording audio
-            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
             
             print ("need to check: " + String(needToCheckInput))
 //            if needToCheckInput {
