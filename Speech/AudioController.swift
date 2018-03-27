@@ -39,9 +39,11 @@ class AudioController {
     do {
         try session.setCategory(AVAudioSessionCategoryRecord, with: .allowBluetooth)
         try session.setActive(true, with: .notifyOthersOnDeactivation)
-        try session.setPreferredIOBufferDuration(10)
+//        try session.setPreferredIOBufferDuration(10)
     }
     catch {
+        print("ERROR")
+        print("Error info: \(error)")
       return -1
     }
 

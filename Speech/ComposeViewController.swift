@@ -25,7 +25,8 @@ import SystemConfiguration
 let SAMPLE_RATE = 16000
 //let SAMPLE_RATE = 44100.0
 
-class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpeakDelegate, ConnectionDelegate, MSBClientManagerDelegate, MSBClientTileDelegate {
+
+class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpeakDelegate, ConnectionDelegate, MSBClientManagerDelegate, MSBClientTileDelegate, AVAudioRecorderDelegate{
     
     @IBOutlet weak var liveLabel: UILabel!
     @IBOutlet weak var textView: UITextView!
@@ -68,6 +69,11 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     var bluetoothConnectSemaphore = DispatchSemaphore(value: 0)
     
+    var mic : AVAudioSessionPortDescription? = nil
+    
+    // for extension
+
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.canSpeak.delegate = self
@@ -96,6 +102,44 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         if !debug {
             debugLabel.isHidden = true
         }
+        
+        
+//        do {
+//            var lgInput: AVAudioSessionPortDescription = AVAudioSession.sharedInstance().availableInputs![1] as! AVAudioSessionPortDescription
+//
+//            try audioSession.setPreferredInput(lgInput)
+//            print (audioSession.availableInputs)
+//        }
+//        catch {
+//            print("error mapping lg headphones")
+//        }
+        
+        print (audioSession.availableInputs)
+        
+        guard let availableInputs = audioSession.availableInputs else {
+            return
+        }
+        
+        
+        for input in availableInputs {
+            print ("input port " + String(describing: input))
+            if input.portType == AVAudioSessionPortBluetoothHFP || input.portType == AVAudioSessionPortBluetoothA2DP{
+                mic = input
+            }
+        }
+        
+//        do {
+//            try audioSession.setPreferredInput(mic)
+//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//            print (audioSession.availableInputs)
+//            print ("mic is: " + String(describing: mic))
+//            print ("current route: " + String(describing: audioSession.currentRoute))
+//            print (mic?.dataSources)
+//
+//        }
+//        catch {
+//            print ("lg pair failed")
+//        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -198,34 +242,35 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
 //            try audioSession.setMode(AVAudioSessionModeDefault)
 //            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
 //            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         } catch {
             fatalError("Error Setting Up Audio Session")
         }
         var inputsPriority: [(type: String, input: AVAudioSessionPortDescription?)] = [
+            (AVAudioSessionPortBluetoothHFP, nil),
+            (AVAudioSessionPortBluetoothA2DP, nil),
             (AVAudioSessionPortLineIn, nil),
             (AVAudioSessionPortHeadsetMic, nil),
-            (AVAudioSessionPortBluetoothHFP, nil),
             (AVAudioSessionPortUSBAudio, nil),
             (AVAudioSessionPortCarAudio, nil),
-            (AVAudioSessionPortBuiltInMic, nil),
+            (AVAudioSessionPortBuiltInMic, nil)
             ]
         for availableInput in audioSession.availableInputs! {
             guard let index = inputsPriority.index(where: { $0.type == availableInput.portType }) else { continue }
             inputsPriority[index].input = availableInput
         }
+        
         guard let input = inputsPriority.filter({ $0.input != nil }).first?.input else {
             fatalError("No Available Ports For Recording")
         }
         do {
             try audioSession.setPreferredInput(input)
-            try audioSession.setActive(true)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         }
         catch {
             fatalError("Error Setting Up Audio Session")
         }
     }
-    
-    
     
     func askUser() {
         backgroundTask.pauseBackgroundTask()
@@ -248,11 +293,31 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     func askUserConfirmation() {
         backgroundTask.pauseBackgroundTask()
         
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+            try audioSession.setMode(AVAudioSessionModeDefault)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+        }
+        catch {
+            
+        }
+        
         self.canSpeak.sayThis("Could you please confirm with yes or no?", speed: 0.5)
     }
     
     func AskUserAgain() {
         backgroundTask.pauseBackgroundTask()
+        
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+            try audioSession.setMode(AVAudioSessionModeDefault)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+        }
+        catch {
+            
+        }
         
         self.canSpeak.sayThis("Could you please repeat what you said?", speed: 0.5)
     }
@@ -260,6 +325,16 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     func checkUserInput(){
         backgroundTask.pauseBackgroundTask()
         firstResponse = self.userInput
+        
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+            try audioSession.setMode(AVAudioSessionModeDefault)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+        }
+        catch {
+            
+        }
         
         self.canSpeak.sayThis("Did you say" + self.userInput, speed: 0.5)
         print("user said " + self.userInput)
@@ -434,8 +509,40 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         
         do {
 //            try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth])
-           
-            try audioSession.setCategory(AVAudioSessionCategoryRecord, with: [.allowBluetooth])
+            
+            
+//            print (audioSession.availableInputs)
+            
+//            guard let availableInputs = audioSession.availableInputs else {
+//                return
+//            }
+//
+//
+//            for input in availableInputs {
+//                print ("input port " + String(describing: input))
+//                if input.portType == AVAudioSessionPortBluetoothHFP || input.portType == AVAudioSessionPortBluetoothA2DP{
+//                    mic = input
+//                }
+//            }
+//
+//
+//
+//            if #available(iOS 10.0, *) {
+//                try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth, .allowBluetoothA2DP])
+//            } else {
+//                // Fallback on earlier versions
+//            }
+            
+//            print (audioSession.sampleRate)
+//            try audioSession.setMode(AVAudioSessionModeVideoChat)
+//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//            try audioSession.setPreferredInput(mic!)
+            
+
+//            print (audioSession.availableInputs)
+//            print ("mic is: " + String(describing: audioSession.preferredInput))
+//            print ("current route: " + String(describing: audioSession.currentRoute))
+
             
         } catch {
             fatalError("Error Setting Up Audio Session")
@@ -457,7 +564,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         
         
         if #available(iOS 10.0, *) {
-            self.timerForRecording = Timer.scheduledTimer(withTimeInterval: 25, repeats: false, block: { (timer) in
+            self.timerForRecording = Timer.scheduledTimer(withTimeInterval: 40, repeats: false, block: { (timer) in
                 self.stopAudioTemp()
                 self.recordingSemaphore.wait()
                 print("timer Stopped")
@@ -467,6 +574,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         self.userInput = "The device did not pick up any sound or the environment is too noisy"
                         self.textView.text = self.userInput
                         try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
+                        try self.audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+                        try self.audioSession.setPreferredInput(self.mic!)
                         self.backgroundTask.startBackgroundTask()
                         self.addPostFunc()
                         print("after 20 seconds")
@@ -475,6 +584,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     // handle errors
                 }
                 print("timer has ended")
+
             })
         } else {
             // Fallback on earlier versions
@@ -550,6 +660,15 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     func speechDidFinish() {
         print ("prompting user")
+        
+        do {
+            // stop session when u finish asking the user
+            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+        }
+        catch {
+            
+        }
+        
         self.promptUser()
     }
     
@@ -563,7 +682,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         
         do {
             print ("finished recording")
-            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+            // stop session from recording audio
+            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
             
             print ("need to check: " + String(needToCheckInput))
 //            if needToCheckInput {

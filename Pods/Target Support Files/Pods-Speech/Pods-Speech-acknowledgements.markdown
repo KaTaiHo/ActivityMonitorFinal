@@ -297,7 +297,7 @@ Copyright 2018 Google
 
 ## FirebaseInstanceID
 
-Copyright 2017 Google
+Copyright 2018 Google
 
 ## GTMSessionFetcher
 
