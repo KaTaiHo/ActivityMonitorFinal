@@ -183,8 +183,13 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     @IBAction func recordAudio(_ sender: NSObject) {
         sessionSemaphore.wait()
         
+
+        
         killThisSession = false
         if client?.isDeviceConnected == true {
+            self.userInput = "user started session"
+            self.addPostFunc()
+            self.userInput = ""
             print("button pressed")
             SpeechRecognitionService.sharedInstance.sampleRate = Int(SAMPLE_RATE)
             
@@ -236,7 +241,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     func setupSessionForRecording() {
         do {
-//            try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, with: [.allowBluetooth])
+            try audioSession.setCategory(AVAudioSessionCategoryRecord, with: [.allowBluetooth])
             
             // testing the following code
 //            try audioSession.setMode(AVAudioSessionModeDefault)
@@ -246,30 +251,45 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         } catch {
             fatalError("Error Setting Up Audio Session")
         }
-        var inputsPriority: [(type: String, input: AVAudioSessionPortDescription?)] = [
-            (AVAudioSessionPortBluetoothHFP, nil),
-            (AVAudioSessionPortBluetoothA2DP, nil),
-            (AVAudioSessionPortLineIn, nil),
-            (AVAudioSessionPortHeadsetMic, nil),
-            (AVAudioSessionPortUSBAudio, nil),
-            (AVAudioSessionPortCarAudio, nil),
-            (AVAudioSessionPortBuiltInMic, nil)
-            ]
+        
+        print ("INPUT LIST:")
+        
+        var deviceName = "LG HBSW120"
         for availableInput in audioSession.availableInputs! {
-            guard let index = inputsPriority.index(where: { $0.type == availableInput.portType }) else { continue }
-            inputsPriority[index].input = availableInput
+            if availableInput.portName == deviceName {
+                do {
+                    try audioSession.setPreferredInput(availableInput)
+                    print ("found and setting the port to: " + String(describing: availableInput))
+                    break;
+                }
+                catch {
+                    fatalError("Error Setting Up Audio Session")
+                }
+            }
         }
         
-        guard let input = inputsPriority.filter({ $0.input != nil }).first?.input else {
-            fatalError("No Available Ports For Recording")
-        }
-        do {
-            try audioSession.setPreferredInput(input)
-//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
-        }
-        catch {
-            fatalError("Error Setting Up Audio Session")
-        }
+        
+//        for availableInput in audioSession.availableInputs! {
+//            print (availableInput)
+//            guard let index = inputsPriority.index(where: { $0.type == availableInput.portType }) else { continue }
+//            inputsPriority[index].input = availableInput
+//        }
+//
+//        guard let input = inputsPriority.filter({ $0.input != nil }).first?.input else {
+//            fatalError("No Available Ports For Recording")
+//        }
+        
+        
+        
+        
+        
+//        do {
+//            try audioSession.setPreferredInput(input)
+////            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+//        }
+//        catch {
+//            fatalError("Error Setting Up Audio Session")
+//        }
     }
     
     func askUser() {
@@ -364,6 +384,10 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     @IBAction func stopAudio(_ sender: NSObject) {
         sessionSemaphore.wait()
         print("stopping the audio")
+        
+        self.userInput = "user stopped the session"
+        self.addPostFunc()
+        self.userInput = ""
 
         if SpeechRecognitionService.sharedInstance.isStreaming() {
             SpeechRecognitionService.sharedInstance.stopStreaming()

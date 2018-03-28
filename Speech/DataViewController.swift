@@ -17,6 +17,9 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
     var referenceArr = [String]()
     var ref:DatabaseReference?
     var databaseHandle:DatabaseHandle?
+    var userId: String?
+    var data = "user logged in"
+    
     
     struct activityData {
         var activity:String
@@ -31,11 +34,13 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         tableView.delegate = self;
         tableView.dataSource = self;
         ref = Database.database().reference()
-        let userId = Auth.auth().currentUser?.uid
+        userId = Auth.auth().currentUser?.uid
+        
+        addPostFunc()
         
         ref?.child("users").child(userId!).child("Posts").observeSingleEvent(of: .value, with: { snapshot in
             print(snapshot.childrenCount) // I got the expected number of items
@@ -112,5 +117,19 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return postData.count
+    }
+    func addPostFunc () {
+        let todaysDate:NSDate = NSDate()
+        let dateFormatter:DateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM-dd-yyyy"
+        let todayString:String = dateFormatter.string(from: todaysDate as Date)
+        let date = Date()
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: date)
+        let minutes = calendar.component(.minute, from: date)
+        let idReference = self.ref?.child("users").child(userId!).child("Posts").childByAutoId()
+        let stringReferenceArr = String(describing: idReference!).components(separatedBy: "/")
+        let stringReference = stringReferenceArr[stringReferenceArr.count - 1]
+        idReference!.setValue(["message": self.data, "date": todayString, "hour": hour, "minutes": minutes, "reference" : stringReference])
     }
 }

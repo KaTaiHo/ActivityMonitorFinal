@@ -38,6 +38,7 @@ class AudioController {
     let session = AVAudioSession.sharedInstance()
     do {
         try session.setCategory(AVAudioSessionCategoryRecord, with: .allowBluetooth)
+        print ("GOOGLE ROUTE: " + String(describing: session.currentRoute))
 //        try session.setActive(true, with: .notifyOthersOnDeactivation)
 //        try session.setPreferredIOBufferDuration(10)
     }
