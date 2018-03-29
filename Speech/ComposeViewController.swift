@@ -68,6 +68,8 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     var recordingSemaphore = DispatchSemaphore(value: 0)
     
     var bluetoothConnectSemaphore = DispatchSemaphore(value: 0)
+    
+    var noInternetString = ""
     // for extension
 
     
@@ -160,7 +162,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             
             textToSpeechTimerBackground = Timer.scheduledTimer(timeInterval: TimeInterval(askInterval), target: self, selector: #selector(self.MBSaskUser), userInfo: nil, repeats: true)
             
-            _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
+//            _ = Timer.scheduledTimer(timeInterval: 30, target: self, selector: #selector(self.clockTick), userInfo: nil, repeats: true)
             self.sessionStarted = true
             liveLabel.text = "Online"
             liveLabel.isHidden = false
@@ -187,12 +189,20 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     func MBSaskUser() {
         if self.isConnectedToNetwork() {
+            if self.noInternetString != "" {
+                self.userInput = self.noInternetString
+                addPostFunc()
+                self.userInput = ""
+                self.noInternetString = ""
+            }
             if !killThisSession {
                 MBandSetUp()
             }
         }
         else {
             print("The user is not connected to the internet")
+            self.textView.text = "The user is not connected to the internet"
+            self.noInternetString += "There was no internet the last session "
         }
     }
     

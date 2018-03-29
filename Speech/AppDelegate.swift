@@ -8,6 +8,8 @@
 
 import UIKit
 import Firebase
+import FirebaseAuth
+import FirebaseDatabase
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -41,9 +43,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+        
+        var userId: String?
+        var ref: DatabaseReference?
+        ref = Database.database().reference()
+        userId = Auth.auth().currentUser?.uid
+        
+        let todaysDate:NSDate = NSDate()
+        let dateFormatter:DateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM-dd-yyyy"
+        let todayString:String = dateFormatter.string(from: todaysDate as Date)
+        let date = Date()
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: date)
+        let minutes = calendar.component(.minute, from: date)
+        let idReference = ref?.child("users").child(userId!).child("Posts").childByAutoId()
+        let stringReferenceArr = String(describing: idReference!).components(separatedBy: "/")
+        let stringReference = stringReferenceArr[stringReferenceArr.count - 1]
+        idReference!.setValue(["message": "user closed the app", "date": todayString, "hour": hour, "minutes": minutes, "reference" : stringReference])
     }
-    
-    
 }
 
 

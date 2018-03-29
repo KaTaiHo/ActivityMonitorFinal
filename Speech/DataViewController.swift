@@ -132,4 +132,5 @@ class DataViewController: UIViewController, UITableViewDelegate, UITableViewData
         let stringReference = stringReferenceArr[stringReferenceArr.count - 1]
         idReference!.setValue(["message": self.data, "date": todayString, "hour": hour, "minutes": minutes, "reference" : stringReference])
     }
+    
 }
