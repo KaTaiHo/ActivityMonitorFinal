@@ -68,9 +68,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     var recordingSemaphore = DispatchSemaphore(value: 0)
     
     var bluetoothConnectSemaphore = DispatchSemaphore(value: 0)
-    
-    var mic : AVAudioSessionPortDescription? = nil
-    
     // for extension
 
     
@@ -82,7 +79,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         userId = Auth.auth().currentUser?.uid
         textView.isEditable = false
         setupSessionForRecording()
-        
         startButton.alpha = 0.5
         pauseButton.alpha = 0.5
         
@@ -102,47 +98,10 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         if !debug {
             debugLabel.isHidden = true
         }
-        
-        
-//        do {
-//            var lgInput: AVAudioSessionPortDescription = AVAudioSession.sharedInstance().availableInputs![1] as! AVAudioSessionPortDescription
-//
-//            try audioSession.setPreferredInput(lgInput)
-//            print (audioSession.availableInputs)
-//        }
-//        catch {
-//            print("error mapping lg headphones")
-//        }
-        
-        print (audioSession.availableInputs)
-        
-        guard let availableInputs = audioSession.availableInputs else {
-            return
-        }
-        
-        
-        for input in availableInputs {
-            print ("input port " + String(describing: input))
-            if input.portType == AVAudioSessionPortBluetoothHFP || input.portType == AVAudioSessionPortBluetoothA2DP{
-                mic = input
-            }
-        }
-        
-//        do {
-//            try audioSession.setPreferredInput(mic)
-//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
-//            print (audioSession.availableInputs)
-//            print ("mic is: " + String(describing: mic))
-//            print ("current route: " + String(describing: audioSession.currentRoute))
-//            print (mic?.dataSources)
-//
-//        }
-//        catch {
-//            print ("lg pair failed")
-//        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        setupSessionForRecording()
         if let client = MSBClientManager.shared().attachedClients().first as? MSBClient {
             self.client = client
             // 2. Set Tile Event Delegate
@@ -206,15 +165,16 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             liveLabel.text = "Online"
             liveLabel.isHidden = false
             liveLabel.textColor = UIColor.red
+            startButton.alpha = 0.5
+            startButton.isUserInteractionEnabled = false
+            pauseButton.alpha = 1
+            pauseButton.isUserInteractionEnabled = true
+            sessionSemaphore.signal()
+        }
+        else {
+            self.textView.text = "Microsoft band is not connected please check"
         }
         // tell the user to wait for the band to connect TODO
-        
-
-        startButton.alpha = 0.5
-        startButton.isUserInteractionEnabled = false
-        pauseButton.alpha = 1
-        pauseButton.isUserInteractionEnabled = true
-        sessionSemaphore.signal()
     }
     
     func clockTick() {
@@ -250,6 +210,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         }
         
         print ("INPUT LIST:")
+        var hasBand = false
         
         var deviceName = "LG HBSW120"
         for availableInput in audioSession.availableInputs! {
@@ -257,6 +218,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                 do {
                     try audioSession.setPreferredInput(availableInput)
                     print ("found and setting the port to: " + String(describing: availableInput))
+                    hasBand = true
                     break;
                 }
                 catch {
@@ -265,28 +227,29 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             }
         }
         
+        var errorString = "Warning:\n "
+        var errorFlag = false
         
-//        for availableInput in audioSession.availableInputs! {
-//            print (availableInput)
-//            guard let index = inputsPriority.index(where: { $0.type == availableInput.portType }) else { continue }
-//            inputsPriority[index].input = availableInput
-//        }
-//
-//        guard let input = inputsPriority.filter({ $0.input != nil }).first?.input else {
-//            fatalError("No Available Ports For Recording")
-//        }
+        if hasBand == false {
+            errorString += " -The LG Band is not connected\n"
+            errorFlag = true
+        }
         
+        if isConnectedToNetwork() == false {
+            errorString += " -no wifi/LTE\n"
+            errorFlag = true
+        }
         
+        errorString += " *****Please make sure you fix this before starting a session*****\n"
+
+        if MSBClientManager.shared().attachedClients().count == 0 {
+            errorString += " -Microsoft band is not connected and the session cannot start without the band. Please connect and restart the app."
+            errorFlag = true
+        }
         
-        
-        
-//        do {
-//            try audioSession.setPreferredInput(input)
-////            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
-//        }
-//        catch {
-//            fatalError("Error Setting Up Audio Session")
-//        }
+        if errorFlag {
+            self.textView.text = errorString
+        }
     }
     
     func askUser() {
@@ -553,6 +516,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         self.userInput = "The device did not pick up any sound or the environment is too noisy"
                         self.textView.text = self.userInput
                         try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
+                        try self.audioSession.setMode(AVAudioSessionModeDefault)
 //                        try self.audioSession.setActive(true, with: .notifyOthersOnDeactivation)
 //                        try self.audioSession.setPreferredInput(self.mic!)
 //                        self.backgroundTask.startBackgroundTask()

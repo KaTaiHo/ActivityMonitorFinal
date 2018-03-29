@@ -41,6 +41,20 @@ class AudioController {
         print ("GOOGLE ROUTE: " + String(describing: session.currentRoute))
 //        try session.setActive(true, with: .notifyOthersOnDeactivation)
 //        try session.setPreferredIOBufferDuration(10)
+        
+        var deviceName = "LG HBSW120"
+        for availableInput in session.availableInputs! {
+            if availableInput.portName == deviceName {
+                do {
+                    try session.setPreferredInput(availableInput)
+                    print ("found and setting the port to: " + String(describing: availableInput))
+                    break;
+                }
+                catch {
+                    fatalError("Error Setting Up Audio Session")
+                }
+            }
+        }
     }
     catch {
         print("ERROR")
