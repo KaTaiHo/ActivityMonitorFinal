@@ -64,7 +64,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     
     var currentQuestion = String()
     
-    var sessionSemaphore = DispatchSemaphore(value: 1)
+    var sessionSemaphore = DispatchSemaphore(value: 0)
     var recordingSemaphore = DispatchSemaphore(value: 0)
     
     var bluetoothConnectSemaphore = DispatchSemaphore(value: 0)
@@ -181,10 +181,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     @IBAction func recordAudio(_ sender: NSObject) {
-        sessionSemaphore.wait()
-        
-
-        
         killThisSession = false
         if client?.isDeviceConnected == true {
             self.userInput = "user started session"
@@ -213,11 +209,12 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         }
         // tell the user to wait for the band to connect TODO
         
-        sessionSemaphore.signal()
+
         startButton.alpha = 0.5
         startButton.isUserInteractionEnabled = false
         pauseButton.alpha = 1
         pauseButton.isUserInteractionEnabled = true
+        sessionSemaphore.signal()
     }
     
     func clockTick() {
@@ -405,7 +402,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         liveLabel.text = "Offline"
         self.sessionStarted = false
         
-        sessionSemaphore.signal()
+
         startButton.alpha = 1
         startButton.isUserInteractionEnabled = true
         pauseButton.alpha = 0.5
@@ -560,7 +557,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
 //                        try self.audioSession.setPreferredInput(self.mic!)
 //                        self.backgroundTask.startBackgroundTask()
                         self.addPostFunc()
-                        print("after 20 seconds")
+                        print("after 40 seconds")
                     }
                 } catch {
                     // handle errors
