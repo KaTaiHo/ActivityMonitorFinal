@@ -535,6 +535,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
 //                        self.backgroundTask.startBackgroundTask()
                         self.addPostFunc()
                         print("after 40 seconds")
+                        self.backgroundTask.startBackgroundTask()
                     }
                 } catch {
                     // handle errors
