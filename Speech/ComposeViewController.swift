@@ -531,7 +531,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         self.textView.text = self.userInput
                         try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
                         try self.audioSession.setMode(AVAudioSessionModeDefault)
-                        try self.audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+//                        try self.audioSession.setActive(false, with: .notifyOthersOnDeactivation)
 //                        try self.audioSession.setPreferredInput(self.mic!)
 //                        self.backgroundTask.startBackgroundTask()
                         self.addPostFunc()
