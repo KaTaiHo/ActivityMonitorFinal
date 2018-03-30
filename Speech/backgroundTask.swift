@@ -26,7 +26,6 @@ class BackgroundTask {
     func pauseBackgroundTask() {
         player.pause()
         do {
-//            try AVAudioSession.sharedInstance().setActive(false)
         } catch { print("error in backgroundTask" + error.localizedDescription) }
     }
     

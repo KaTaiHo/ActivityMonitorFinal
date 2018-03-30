@@ -139,12 +139,6 @@ class AudioController {
 
   func stop() -> OSStatus {
     let session = AVAudioSession.sharedInstance()
-//    do {
-//        try session.setActive(false, with: .notifyOthersOnDeactivation)
-//    }
-//    catch {
-//        return -1
-//    }
     return AudioOutputUnitStop(remoteIOUnit!)
   }
 }

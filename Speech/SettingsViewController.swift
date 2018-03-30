@@ -16,16 +16,6 @@ class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPicker
     @IBOutlet weak var userTimeInterval: UITextField!
     
     @IBAction func goBack(_ sender: Any) {
-        
-        let audioSession = AVAudioSession.sharedInstance()  //2
-        do
-        {
-            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
-        }
-        catch
-        {
-            print("audioSession properties weren't set because of an error.")
-        }
         presentingViewController?.dismiss(animated: true, completion: nil)
     }
     
@@ -55,9 +45,6 @@ class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPicker
         {
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
-            //try audioSession.setMode(AVAudioSessionModeMeasurement)
-//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
-//            try AVAudioSession.sharedInstance().overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
         }
         catch
         {
@@ -107,7 +94,6 @@ class SettingsViewController: UIViewController, UIPickerViewDataSource, UIPicker
     func speechDidFinish() {
         let audioSession = AVAudioSession.sharedInstance()
         do {
-//            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
         }
         catch
         {

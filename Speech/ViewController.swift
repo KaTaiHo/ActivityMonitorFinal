@@ -153,7 +153,6 @@ class ViewController : UIViewController, AudioControllerDelegate, CanSpeakDelega
                             do {
                                 let audioSession = AVAudioSession.sharedInstance()
                                 try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
-                                try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
                             } catch {
                                 // handle errors
                             }
