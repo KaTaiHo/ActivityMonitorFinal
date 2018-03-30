@@ -472,6 +472,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                                 }
                                 else {
                                     print ("The user is busy or they paused the session")
+                                    self.backgroundTask.startBackgroundTask()
                                 }
                                 
                                 self.askUserFlag = true
