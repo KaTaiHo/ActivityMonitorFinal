@@ -188,6 +188,9 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
     }
     
     func MBSaskUser() {
+        backgroundTask.stopBackgroundTask()
+        backgroundTask.startBackgroundTask()
+        
         if self.isConnectedToNetwork() {
             if self.noInternetString != "" {
                 self.userInput = self.noInternetString
@@ -271,7 +274,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
-//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         }
         catch {
             
@@ -287,7 +290,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
-//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         }
         catch {
             
@@ -303,7 +306,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
-//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         }
         catch {
             
@@ -320,7 +323,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(AVAudioSessionCategoryPlayback)
             try audioSession.setMode(AVAudioSessionModeDefault)
-//            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+            try audioSession.setActive(true, with: .notifyOthersOnDeactivation)
         }
         catch {
             
@@ -527,7 +530,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         self.textView.text = self.userInput
                         try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
                         try self.audioSession.setMode(AVAudioSessionModeDefault)
-//                        try self.audioSession.setActive(true, with: .notifyOthersOnDeactivation)
+                        try self.audioSession.setActive(false, with: .notifyOthersOnDeactivation)
 //                        try self.audioSession.setPreferredInput(self.mic!)
 //                        self.backgroundTask.startBackgroundTask()
                         self.addPostFunc()
@@ -665,6 +668,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     }
                     self.needToCheckInput = false
 //                    try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
+                    self.backgroundTask.startBackgroundTask()
                 }
                 else if (self.userInput == "yes" || self.userInput == "yeah" || self.userInput == "correct") && needToCheckInput {
                     print ("Post confirmed")
@@ -695,7 +699,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     self.needToCheckInput = false
                     
 //                    try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
-//                    self.backgroundTask.startBackgroundTask()
+                    self.backgroundTask.startBackgroundTask()
                 }
                 else if (self.userInput == "no" || self.userInput == "nah") && needToCheckInput {
                     needToCheckInput = false
