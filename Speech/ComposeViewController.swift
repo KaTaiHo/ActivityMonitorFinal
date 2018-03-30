@@ -531,9 +531,7 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         self.textView.text = self.userInput
                         try self.audioSession.setCategory(AVAudioSessionCategoryPlayback)
                         try self.audioSession.setMode(AVAudioSessionModeDefault)
-//                        try self.audioSession.setActive(false, with: .notifyOthersOnDeactivation)
-//                        try self.audioSession.setPreferredInput(self.mic!)
-//                        self.backgroundTask.startBackgroundTask()
+
                         self.addPostFunc()
                         print("after 40 seconds")
                         self.backgroundTask.startBackgroundTask()
@@ -621,7 +619,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         
         do {
             // stop session when u finish asking the user
-//            try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
         }
         catch {
             
@@ -669,7 +666,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                         // Fallback on earlier versions
                     }
                     self.needToCheckInput = false
-//                    try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
                     self.backgroundTask.startBackgroundTask()
                 }
                 else if (self.userInput == "yes" || self.userInput == "yeah" || self.userInput == "correct") && needToCheckInput {
@@ -700,7 +696,6 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
                     
                     self.needToCheckInput = false
                     
-//                    try audioSession.setActive(false, with: .notifyOthersOnDeactivation)
                     self.backgroundTask.startBackgroundTask()
                 }
                 else if (self.userInput == "no" || self.userInput == "nah") && needToCheckInput {
