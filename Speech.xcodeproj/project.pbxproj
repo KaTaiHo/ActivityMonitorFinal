@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2C450CC6320CA9890051ABAF /* Pods_Speech.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0B7F558BD8BC89862C8C277 /* Pods_Speech.framework */; };
+		4B62496D2071D2AF00961F7A /* logic.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 4B62496C2071D2AF00961F7A /* logic.mp3 */; };
 		4B8B29EA2052335600BF2F74 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8B29E92052335600BF2F74 /* SettingsViewController.swift */; };
 		4B9A561520376C3A0071D8A2 /* MicrosoftBandKit_iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B9A561420376C390071D8A2 /* MicrosoftBandKit_iOS.framework */; };
 		4BF0D7DB1FE63DC60006BA2C /* canSpeak.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF0D7DA1FE63DC60006BA2C /* canSpeak.swift */; };
@@ -33,6 +34,7 @@
 
 /* Begin PBXFileReference section */
 		4B5448EA2069ACF400C84BC9 /* SpeechSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SpeechSDK.framework; path = "../../test/Cognitive-Speech-STT-iOS/iPhoneOS/SpeechSDK.framework"; sourceTree = "<group>"; };
+		4B62496C2071D2AF00961F7A /* logic.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = logic.mp3; sourceTree = "<group>"; };
 		4B8B29E92052335600BF2F74 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		4B9A561420376C390071D8A2 /* MicrosoftBandKit_iOS.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MicrosoftBandKit_iOS.framework; sourceTree = "<group>"; };
 		4BF0D7DA1FE63DC60006BA2C /* canSpeak.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = canSpeak.swift; sourceTree = "<group>"; };
@@ -114,6 +116,7 @@
 		D34C17CB1C948F5700D69BCA /* Speech */ = {
 			isa = PBXGroup;
 			children = (
+				4B62496C2071D2AF00961F7A /* logic.mp3 */,
 				4BF84A23203E937D00E676CB /* D.png */,
 				4BF84A22203E937C00E676CB /* Dd.png */,
 				4BF0D7F21FE9B9010006BA2C /* silence.mp3 */,
@@ -229,6 +232,7 @@
 				D392D9861C94937D002F5132 /* Main.storyboard in Resources */,
 				4BF0D7E91FE644D90006BA2C /* GoogleService-Info.plist in Resources */,
 				D34C17DC1C948F5800D69BCA /* LaunchScreen.storyboard in Resources */,
+				4B62496D2071D2AF00961F7A /* logic.mp3 in Resources */,
 				D34C17D91C948F5800D69BCA /* Assets.xcassets in Resources */,
 				4BF84A24203E937E00E676CB /* Dd.png in Resources */,
 			);

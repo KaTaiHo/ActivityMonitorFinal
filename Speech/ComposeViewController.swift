@@ -192,6 +192,15 @@ class ComposeViewController : UIViewController, AudioControllerDelegate, CanSpea
         backgroundTask.startBackgroundTask()
         
         if self.isConnectedToNetwork() {
+            
+            self.userInput = "killThisSession: " + String(describing: killThisSession)
+            addPostFunc()
+            self.userInput = ""
+            
+            self.userInput = "Microsoftband status: " + String(describing: client?.isDeviceConnected)
+            addPostFunc()
+            self.userInput = ""
+            
             if self.noInternetString != "" {
                 self.userInput = self.noInternetString
                 addPostFunc()
